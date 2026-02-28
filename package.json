@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "web-test-runner \"tests/**/*.test.js\" --node-resolve",
+    "deploy:gh-pages": "vite build && npx gh-pages -d dist",
     "publish42:10001": "vite build && rm -rf taskmanagehtml && mv dist taskmanagehtml && scp -r ./taskmanagehtml root@47.99.205.22:/usr/share/nginx/"
   },
   "devDependencies": {
@@ -16,6 +17,7 @@
     "@web/test-runner": "^0.20.2",
     "chai": "^5.3.3",
     "chai-datetime": "^1.8.1",
+    "gh-pages": "^6.3.0",
     "vite": "^5.4.21"
   },
   "keywords": [

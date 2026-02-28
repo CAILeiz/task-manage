@@ -1,4 +1,4 @@
-(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))r(o);new MutationObserver(o=>{for(const a of o)if(a.type==="childList")for(const i of a.addedNodes)i.tagName==="LINK"&&i.rel==="modulepreload"&&r(i)}).observe(document,{childList:!0,subtree:!0});function t(o){const a={};return o.integrity&&(a.integrity=o.integrity),o.referrerPolicy&&(a.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?a.credentials="include":o.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function r(o){if(o.ep)return;o.ep=!0;const a=t(o);fetch(o.href,a)}})();const x="task-manager-db",y=1,h="tasks";async function w(){return new Promise((s,e)=>{const t=indexedDB.open(x,y);t.onerror=()=>{var r;e(new Error(`Failed to open database: ${(r=t.error)==null?void 0:r.message}`))},t.onsuccess=()=>{s(t.result)},t.onupgradeneeded=r=>{const o=r.target.result;if(!o.objectStoreNames.contains(h)){const a=o.createObjectStore(h,{keyPath:"id"});a.createIndex("priority","priority",{unique:!1}),a.createIndex("dueDate","dueDate",{unique:!1}),a.createIndex("completed","completed",{unique:!1}),a.createIndex("createdAt","createdAt",{unique:!1})}}})}let m=null;async function p(){return m||(m=await w(),m)}function v(){return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(s){const e=Math.random()*16|0;return(s==="x"?e:e&3|8).toString(16)})}const f={HIGH:"HIGH",MEDIUM:"MEDIUM",LOW:"LOW"};function u(s){const e=[];return!s.name||typeof s.name!="string"?e.push("Name is required"):(s.name.trim().length===0||s.name.length>200)&&e.push("Name must be 1-200 characters"),s.description!==void 0&&s.description!==null&&(typeof s.description!="string"?e.push("Description must be a string"):s.description.length>100&&e.push("Description must be 100 characters or less")),[f.HIGH,f.MEDIUM,f.LOW].includes(s.priority)||e.push("Priority must be HIGH, MEDIUM, or LOW"),s.dueDate!==null&&s.dueDate!==void 0&&(k(s.dueDate)||e.push("dueDate must be ISO 8601 format (YYYY-MM-DD)")),typeof s.completed!="boolean"&&e.push("completed must be a boolean"),typeof s.createdAt!="number"&&e.push("createdAt must be a timestamp"),typeof s.updatedAt!="number"&&e.push("updatedAt must be a timestamp"),{valid:e.length===0,errors:e}}function k(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return!1;const e=new Date(s);return!isNaN(e.getTime())}function E({name:s,priority:e,description:t="",dueDate:r=null,completed:o=!1}){const a=Date.now(),i={id:v(),name:s.trim(),description:(t==null?void 0:t.trim())||"",priority:e,dueDate:r,completed:o,createdAt:a,updatedAt:a},n=u(i);if(!n.valid)throw new Error(`Invalid task: ${n.errors.join(", ")}`);return i}function g(s,e){const t={...s,...e,updatedAt:Date.now()},r=u(t);if(!r.valid)throw new Error(`Invalid task update: ${r.errors.join(", ")}`);return t}const c="tasks";class D{async create(e){const t=await p();return new Promise((r,o)=>{const a=u(e);if(!a.valid){o(new Error(`Validation failed: ${a.errors.join(", ")}`));return}const l=t.transaction(c,"readwrite").objectStore(c).add(e);l.onsuccess=()=>r(e),l.onerror=()=>{var d;return o(new Error(`Failed to create task: ${(d=l.error)==null?void 0:d.message}`))}})}async findAll(){const e=await p();return new Promise((t,r)=>{const i=e.transaction(c,"readonly").objectStore(c).getAll();i.onsuccess=()=>t(i.result),i.onerror=()=>{var n;return r(new Error(`Failed to find tasks: ${(n=i.error)==null?void 0:n.message}`))}})}async findById(e){const t=await p();return new Promise((r,o)=>{const n=t.transaction(c,"readonly").objectStore(c).get(e);n.onsuccess=()=>r(n.result||null),n.onerror=()=>{var l;return o(new Error(`Failed to find task: ${(l=n.error)==null?void 0:l.message}`))}})}async update(e){const t=await p();return new Promise((r,o)=>{const a=u(e);if(!a.valid){o(new Error(`Validation failed: ${a.errors.join(", ")}`));return}const l=t.transaction(c,"readwrite").objectStore(c).put(e);l.onsuccess=()=>r(e),l.onerror=()=>{var d;return o(new Error(`Failed to update task: ${(d=l.error)==null?void 0:d.message}`))}})}async delete(e){const t=await p();return new Promise((r,o)=>{const n=t.transaction(c,"readwrite").objectStore(c).delete(e);n.onsuccess=()=>r(),n.onerror=()=>{var l;return o(new Error(`Failed to delete task: ${(l=n.error)==null?void 0:l.message}`))}})}async findByPriority(e){const t=await p();return new Promise((r,o)=>{const l=t.transaction(c,"readonly").objectStore(c).index("priority").getAll(e);l.onsuccess=()=>r(l.result),l.onerror=()=>{var d;return o(new Error(`Failed to find tasks by priority: ${(d=l.error)==null?void 0:d.message}`))}})}async findByDueDate(e){const t=await this.findAll(),r=new Date;switch(r.setHours(0,0,0,0),e){case"today":return t.filter(o=>o.dueDate?new Date(o.dueDate).toDateString()===r.toDateString():!1);case"upcoming":{const o=new Date(r);return o.setDate(o.getDate()+7),t.filter(a=>{if(!a.dueDate)return!1;const i=new Date(a.dueDate);return i>=r&&i<=o})}case"overdue":return t.filter(o=>!o.dueDate||o.completed?!1:new Date(o.dueDate)<r);case"none":return t.filter(o=>!o.dueDate);default:throw new Error(`Unknown date filter: ${e}`)}}}class T extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this._tasks=[],this._editingTaskId=null}set tasks(e){this._tasks=e||[],this.render()}get tasks(){return this._tasks}connectedCallback(){this.render()}render(){if(!this._tasks||this._tasks.length===0){this.renderEmpty(),this.attachEvents();return}this.shadowRoot.innerHTML=`
+(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))o(r);new MutationObserver(r=>{for(const a of r)if(a.type==="childList")for(const s of a.addedNodes)s.tagName==="LINK"&&s.rel==="modulepreload"&&o(s)}).observe(document,{childList:!0,subtree:!0});function t(r){const a={};return r.integrity&&(a.integrity=r.integrity),r.referrerPolicy&&(a.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?a.credentials="include":r.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function o(r){if(r.ep)return;r.ep=!0;const a=t(r);fetch(r.href,a)}})();const x="task-manager-db",v=1,h="tasks";async function y(){return new Promise((n,e)=>{const t=indexedDB.open(x,v);t.onerror=()=>{var o;e(new Error(`Failed to open database: ${(o=t.error)==null?void 0:o.message}`))},t.onsuccess=()=>{n(t.result)},t.onupgradeneeded=o=>{const r=o.target.result;if(!r.objectStoreNames.contains(h)){const a=r.createObjectStore(h,{keyPath:"id"});a.createIndex("priority","priority",{unique:!1}),a.createIndex("dueDate","dueDate",{unique:!1}),a.createIndex("completed","completed",{unique:!1}),a.createIndex("createdAt","createdAt",{unique:!1})}}})}let m=null;async function p(){return m||(m=await y(),m)}function w(){return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(n){const e=Math.random()*16|0;return(n==="x"?e:e&3|8).toString(16)})}const f={HIGH:"HIGH",MEDIUM:"MEDIUM",LOW:"LOW"};function u(n){const e=[];return!n.name||typeof n.name!="string"?e.push("Name is required"):(n.name.trim().length===0||n.name.length>200)&&e.push("Name must be 1-200 characters"),n.description!==void 0&&n.description!==null&&(typeof n.description!="string"?e.push("Description must be a string"):n.description.length>100&&e.push("Description must be 100 characters or less")),[f.HIGH,f.MEDIUM,f.LOW].includes(n.priority)||e.push("Priority must be HIGH, MEDIUM, or LOW"),n.dueDate!==null&&n.dueDate!==void 0&&(k(n.dueDate)||e.push("dueDate must be ISO 8601 format (YYYY-MM-DD)")),typeof n.completed!="boolean"&&e.push("completed must be a boolean"),typeof n.createdAt!="number"&&e.push("createdAt must be a timestamp"),typeof n.updatedAt!="number"&&e.push("updatedAt must be a timestamp"),{valid:e.length===0,errors:e}}function k(n){if(!/^\d{4}-\d{2}-\d{2}$/.test(n))return!1;const e=new Date(n);return!isNaN(e.getTime())}function E({name:n,priority:e,description:t="",dueDate:o=null,completed:r=!1}){const a=Date.now(),s={id:w(),name:n.trim(),description:(t==null?void 0:t.trim())||"",priority:e,dueDate:o,completed:r,createdAt:a,updatedAt:a},i=u(s);if(!i.valid)throw new Error(`Invalid task: ${i.errors.join(", ")}`);return s}function g(n,e){const t={...n,...e,updatedAt:Date.now()},o=u(t);if(!o.valid)throw new Error(`Invalid task update: ${o.errors.join(", ")}`);return t}const c="tasks";class D{async create(e){const t=await p();return new Promise((o,r)=>{const a=u(e);if(!a.valid){r(new Error(`Validation failed: ${a.errors.join(", ")}`));return}const l=t.transaction(c,"readwrite").objectStore(c).add(e);l.onsuccess=()=>o(e),l.onerror=()=>{var d;return r(new Error(`Failed to create task: ${(d=l.error)==null?void 0:d.message}`))}})}async findAll(){const e=await p();return new Promise((t,o)=>{const s=e.transaction(c,"readonly").objectStore(c).getAll();s.onsuccess=()=>t(s.result),s.onerror=()=>{var i;return o(new Error(`Failed to find tasks: ${(i=s.error)==null?void 0:i.message}`))}})}async findById(e){const t=await p();return new Promise((o,r)=>{const i=t.transaction(c,"readonly").objectStore(c).get(e);i.onsuccess=()=>o(i.result||null),i.onerror=()=>{var l;return r(new Error(`Failed to find task: ${(l=i.error)==null?void 0:l.message}`))}})}async update(e){const t=await p();return new Promise((o,r)=>{const a=u(e);if(!a.valid){r(new Error(`Validation failed: ${a.errors.join(", ")}`));return}const l=t.transaction(c,"readwrite").objectStore(c).put(e);l.onsuccess=()=>o(e),l.onerror=()=>{var d;return r(new Error(`Failed to update task: ${(d=l.error)==null?void 0:d.message}`))}})}async delete(e){const t=await p();return new Promise((o,r)=>{const i=t.transaction(c,"readwrite").objectStore(c).delete(e);i.onsuccess=()=>o(),i.onerror=()=>{var l;return r(new Error(`Failed to delete task: ${(l=i.error)==null?void 0:l.message}`))}})}async findByPriority(e){const t=await p();return new Promise((o,r)=>{const l=t.transaction(c,"readonly").objectStore(c).index("priority").getAll(e);l.onsuccess=()=>o(l.result),l.onerror=()=>{var d;return r(new Error(`Failed to find tasks by priority: ${(d=l.error)==null?void 0:d.message}`))}})}async findByDueDate(e){const t=await this.findAll(),o=new Date;switch(o.setHours(0,0,0,0),e){case"today":return t.filter(r=>r.dueDate?new Date(r.dueDate).toDateString()===o.toDateString():!1);case"upcoming":{const r=new Date(o);return r.setDate(r.getDate()+7),t.filter(a=>{if(!a.dueDate)return!1;const s=new Date(a.dueDate);return s>=o&&s<=r})}case"overdue":return t.filter(r=>!r.dueDate||r.completed?!1:new Date(r.dueDate)<o);case"none":return t.filter(r=>!r.dueDate);default:throw new Error(`Unknown date filter: ${e}`)}}}class T extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this._tasks=[],this._editingTaskId=null,this._activeFilter="all"}set tasks(e){this._tasks=e||[],this._activeFilter!=="all"&&this._tasks.length===0&&(this._activeFilter="all"),this.render()}get tasks(){return this._tasks}connectedCallback(){this.render()}render(){if(!this._tasks||this._tasks.length===0){this.renderEmpty(),this.attachEvents();return}this.shadowRoot.innerHTML=`
       <style>
         :host {
           display: block;
@@ -63,6 +63,14 @@
           border-radius: 9999px;
           background: white;
           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          cursor: pointer;
+          transition: all 0.2s;
+          user-select: none;
+        }
+
+        .stat-item:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .stat-item.completed {
@@ -70,9 +78,35 @@
           font-weight: 600;
         }
 
+        .stat-item.completed:hover {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .stat-item.completed.active {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
         .stat-item.pending {
           color: #d97706;
           font-weight: 600;
+        }
+
+        .stat-item.pending:hover {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .stat-item.pending.active {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-item.all.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         /* Task Item Styles */
@@ -502,18 +536,31 @@
       <div class="task-list">
         <div class="stats">
           <div class="stats-left">
-            <span class="stat-item">共 ${this._tasks.length} 个任务</span>
-            <span class="stat-item completed">✅ 已完成 ${this._tasks.filter(e=>e.completed).length}</span>
-            <span class="stat-item pending">⏳ 未完成 ${this._tasks.filter(e=>!e.completed).length}</span>
+            <span class="stat-item all ${this._activeFilter==="all"?"active":""}" data-filter="all">
+              📋 共 ${this._tasks.length} 个任务
+            </span>
+            <span class="stat-item completed ${this._activeFilter==="completed"?"active":""}" data-filter="completed">
+              ✅ 已完成 ${this._tasks.filter(e=>e.completed).length}
+            </span>
+            <span class="stat-item pending ${this._activeFilter==="pending"?"active":""}" data-filter="pending">
+              ⏳ 未完成 ${this._tasks.filter(e=>!e.completed).length}
+            </span>
           </div>
         </div>
-        ${this._tasks.map(e=>this.renderTaskItem(e)).join("")}
+        <div class="task-items-container">
+          ${this._tasks.map(e=>this.renderTaskItem(e)).join("")}
+        </div>
       </div>
-    `,this.attachEvents()}renderTaskItem(e){const t={HIGH:"高优先级",MEDIUM:"中优先级",LOW:"低优先级"},r={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#10b981"},o=e.dueDate?e.dueDate:"无截止日期",a=e.dueDate&&!e.completed&&e.dueDate<new Date().toISOString().split("T")[0],i=new Date(e.createdAt),n=this.formatRelativeTime(i);return`
+    `,this.attachEvents()}renderTaskListOnly(e){const t=this.shadowRoot.querySelector(".task-items-container");if(!t){console.error("[TaskList] task-items-container not found");return}if(!e||e.length===0){t.innerHTML=`
+        <div class="empty-state" style="padding: 2rem; text-align: center; color: #6b7280;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+          <div style="font-size: 1.125rem;">暂无符合条件的任务</div>
+        </div>
+      `;return}t.innerHTML=e.map(o=>this.renderTaskItem(o)).join("")}updateActiveFilter(){this.shadowRoot.querySelectorAll(".stat-item").forEach(e=>{e.classList.remove("active"),e.dataset.filter===this._activeFilter&&e.classList.add("active")})}renderTaskItem(e){const t={HIGH:"高优先级",MEDIUM:"中优先级",LOW:"低优先级"},o={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#10b981"},r=e.dueDate?e.dueDate:"无截止日期",a=e.dueDate&&!e.completed&&e.dueDate<new Date().toISOString().split("T")[0],s=new Date(e.createdAt),i=this.formatRelativeTime(s);return`
       <div class="task-item ${e.priority} ${e.completed?"completed":""}" data-task-id="${e.id}">
         <div
           class="priority-indicator"
-          style="background: ${r[e.priority]}"
+          style="background: ${o[e.priority]}"
           title="${t[e.priority]}"
         ></div>
 
@@ -529,9 +576,9 @@
               ${t[e.priority]}
             </span>
             <span class="due-date ${a?"overdue":""}">
-              📅 ${o}
+              📅 ${r}
             </span>
-            <span class="created-time">⏰ ${n}</span>
+            <span class="created-time">⏰ ${i}</span>
           </div>
         </div>
 
@@ -591,14 +638,71 @@
           margin-top: 0.5rem;
           color: #d1d5db;
         }
+
+        .stats {
+          padding: 1rem 1.5rem;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          border-radius: 1rem;
+          margin: 1rem;
+          font-size: 0.875rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .stats-left {
+          display: flex;
+          gap: 1.25rem;
+          flex-wrap: wrap;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .stat-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          background: white;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          cursor: pointer;
+          transition: all 0.2s;
+          user-select: none;
+        }
+
+        .stat-item:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item.all.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
       </style>
+
+      <div class="stats">
+        <div class="stats-left">
+          <span class="stat-item all ${this._activeFilter==="all"?"active":""}" data-filter="all">
+            📋 共 0 个任务
+          </span>
+          <span class="stat-item completed ${this._activeFilter==="completed"?"active":""}" data-filter="completed">
+            ✅ 已完成 0
+          </span>
+          <span class="stat-item pending ${this._activeFilter==="pending"?"active":""}" data-filter="pending">
+            ⏳ 未完成 0
+          </span>
+        </div>
+      </div>
 
       <div class="empty-state">
         <div class="empty-state-icon">📝</div>
         <div class="empty-state-text">暂无任务，创建一个吧！</div>
         <div class="empty-state-hint">点击上方表单添加新任务</div>
       </div>
-    `}renderEditModal(e){var o;const t=((o=e.description)==null?void 0:o.length)||0,r=t>=100?"error":t>=80?"warning":"";return`
+    `,this.attachEvents()}renderEditModal(e){var r;const t=((r=e.description)==null?void 0:r.length)||0,o=t>=100?"error":t>=80?"warning":"";return`
       <div class="modal-overlay">
         <div class="modal">
           <div class="modal-header">
@@ -632,7 +736,7 @@
                 maxlength="100"
                 rows="3"
               >${this.escapeHtml(e.description||"")}</textarea>
-              <div class="char-count ${r}" id="edit-desc-count">${t}/100</div>
+              <div class="char-count ${o}" id="edit-desc-count">${t}/100</div>
             </div>
 
             <div class="form-group">
@@ -651,7 +755,7 @@
           </form>
         </div>
       </div>
-    `}attachEvents(){this.shadowRoot.addEventListener("click",e=>{const t=e.target.closest(".toggle-complete"),r=e.target.closest(".edit-task"),o=e.target.closest(".delete-task"),a=e.target.closest('[data-action="close-modal"]');if(t){const i=t.dataset.taskId;console.log("[TaskList] Toggle button clicked, taskId:",i),this.dispatchEvent(new CustomEvent("task-toggle",{detail:{id:i},bubbles:!0,composed:!0}))}else if(r){const i=r.dataset.taskId,n=this._tasks.find(l=>l.id===i);n&&this.openEditModal(n)}else if(o){const i=o.dataset.taskId;confirm("确定要删除这个任务吗？")&&this.dispatchEvent(new CustomEvent("task-delete",{detail:{id:i},bubbles:!0,composed:!0}))}else a&&this.closeEditModal()}),this.shadowRoot.addEventListener("submit",e=>{e.target.id==="edit-task-form"&&(e.preventDefault(),this.handleEditSubmit(e.target))}),this.shadowRoot.addEventListener("input",e=>{if(e.target.id==="edit-description"){const t=e.target.value.length,r=this.shadowRoot.querySelector("#edit-desc-count");r&&(r.textContent=`${t}/100`,r.className=`char-count ${t>=100?"error":t>=80?"warning":""}`)}}),this.shadowRoot.addEventListener("click",e=>{e.target.classList.contains("modal-overlay")&&this.closeEditModal()})}openEditModal(e){this._editingTaskId=e.id;const t=this.renderEditModal(e),a=new DOMParser().parseFromString(t,"text/html").querySelector(".modal-overlay");this.shadowRoot.appendChild(a);const i=this.shadowRoot.querySelector("#edit-name");i&&(i.focus(),i.select())}closeEditModal(){const e=this.shadowRoot.querySelector(".modal-overlay");e&&e.remove(),this._editingTaskId=null}handleEditSubmit(e){const t=new FormData(e),r={id:t.get("id"),name:t.get("name").trim(),description:t.get("description").trim(),priority:t.get("priority")};if(!r.name){alert("任务名称不能为空");return}console.log("[TaskList] Editing task:",r);const o=new CustomEvent("task-edit",{detail:r,bubbles:!0,composed:!0});this.dispatchEvent(o),console.log("[TaskList] Dispatched task-edit event"),this.closeEditModal()}formatRelativeTime(e){const r=new Date-e,o=Math.floor(r/6e4),a=Math.floor(r/36e5),i=Math.floor(r/864e5),n=String(e.getHours()).padStart(2,"0"),l=String(e.getMinutes()).padStart(2,"0"),d=`${n}:${l}`;return o<1?`刚刚 ${d}`:o<60?`${o} 分钟前 ${d}`:a<24?`今天 ${d}`:i<7?`${i} 天前 ${d}`:e.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"})+` ${d}`}escapeHtml(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}}customElements.define("task-list",T);class S extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.attachEvents()}render(){this.shadowRoot.innerHTML=`
+    `}attachEvents(){this.shadowRoot.addEventListener("click",e=>{console.log("[TaskList] Click event, target:",e.target.className);const t=e.target.closest(".toggle-complete"),o=e.target.closest(".edit-task"),r=e.target.closest(".delete-task"),a=e.target.closest('[data-action="close-modal"]'),s=e.target.closest(".stat-item");if(s){const i=s.dataset.filter;console.log("[TaskList] Stat item clicked, filter:",i),this.handleFilterClick(i);return}if(t){const i=t.dataset.taskId;console.log("[TaskList] Toggle button clicked, taskId:",i),this.dispatchEvent(new CustomEvent("task-toggle",{detail:{id:i},bubbles:!0,composed:!0}))}else if(o){const i=o.dataset.taskId,l=this._tasks.find(d=>d.id===i);l&&this.openEditModal(l)}else if(r){const i=r.dataset.taskId;confirm("确定要删除这个任务吗？")&&this.dispatchEvent(new CustomEvent("task-delete",{detail:{id:i},bubbles:!0,composed:!0}))}else a&&this.closeEditModal()}),this.shadowRoot.addEventListener("submit",e=>{e.target.id==="edit-task-form"&&(e.preventDefault(),this.handleEditSubmit(e.target))}),this.shadowRoot.addEventListener("input",e=>{if(e.target.id==="edit-description"){const t=e.target.value.length,o=this.shadowRoot.querySelector("#edit-desc-count");o&&(o.textContent=`${t}/100`,o.className=`char-count ${t>=100?"error":t>=80?"warning":""}`)}}),this.shadowRoot.addEventListener("click",e=>{e.target.classList.contains("modal-overlay")&&this.closeEditModal()})}handleFilterClick(e){console.log("[TaskList] handleFilterClick called with:",e),console.log("[TaskList] Current activeFilter:",this._activeFilter),console.log("[TaskList] Current tasks:",this._tasks);const t=this._activeFilter===e?"all":e;this._activeFilter=t,console.log("[TaskList] New activeFilter:",t);let o=[...this._tasks];t==="completed"?o=this._tasks.filter(r=>r.completed):t==="pending"&&(o=this._tasks.filter(r=>!r.completed)),console.log("[TaskList] Filtered tasks:",o),this.renderTaskListOnly(o),this.updateActiveFilter()}openEditModal(e){this._editingTaskId=e.id;const t=this.renderEditModal(e),a=new DOMParser().parseFromString(t,"text/html").querySelector(".modal-overlay");this.shadowRoot.appendChild(a);const s=this.shadowRoot.querySelector("#edit-name");s&&(s.focus(),s.select())}closeEditModal(){const e=this.shadowRoot.querySelector(".modal-overlay");e&&e.remove(),this._editingTaskId=null}handleEditSubmit(e){const t=new FormData(e),o={id:t.get("id"),name:t.get("name").trim(),description:t.get("description").trim(),priority:t.get("priority")};if(!o.name){alert("任务名称不能为空");return}console.log("[TaskList] Editing task:",o);const r=new CustomEvent("task-edit",{detail:o,bubbles:!0,composed:!0});this.dispatchEvent(r),console.log("[TaskList] Dispatched task-edit event"),this.closeEditModal()}formatRelativeTime(e){const o=new Date-e,r=Math.floor(o/6e4),a=Math.floor(o/36e5),s=Math.floor(o/864e5),i=String(e.getHours()).padStart(2,"0"),l=String(e.getMinutes()).padStart(2,"0"),d=`${i}:${l}`;return r<1?`刚刚 ${d}`:r<60?`${r} 分钟前 ${d}`:a<24?`今天 ${d}`:s<7?`${s} 天前 ${d}`:e.toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"})+` ${d}`}escapeHtml(e){if(!e)return"";const t=document.createElement("div");return t.textContent=e,t.innerHTML}}customElements.define("task-list",T);class L extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.attachEvents()}render(){this.shadowRoot.innerHTML=`
       <style>
         :host {
           display: flex;
@@ -728,7 +832,7 @@
           <option value="none">无截止日期</option>
         </select>
       </div>
-    `}attachEvents(){const e=this.shadowRoot.querySelector("#priority-filter"),t=this.shadowRoot.querySelector("#due-date-filter");e.addEventListener("change",r=>{this.dispatchEvent(new CustomEvent("filter-change",{detail:{type:"priority",value:r.target.value},bubbles:!0,composed:!0}))}),t.addEventListener("change",r=>{this.dispatchEvent(new CustomEvent("filter-change",{detail:{type:"dueDate",value:r.target.value},bubbles:!0,composed:!0}))})}}customElements.define("filter-bar",S);class I extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this._visible=!1,this._eventsAttached=!1}connectedCallback(){this.render()}show(){this._visible=!0,this._eventsAttached=!1,this.render(),this.attachEvents(),this.setDefaultValues(),setTimeout(()=>{const e=this.shadowRoot.querySelector("#task-name");e&&e.focus()},50)}hide(){this._visible=!1;const e=this._handleEsc;e&&document.removeEventListener("keydown",e),this.render()}setDefaultValues(){const e=this.shadowRoot.querySelector("#task-priority");e&&(e.value="HIGH");const t=this.shadowRoot.querySelector("#task-due-date");if(t){const r=new Date().toISOString().split("T")[0];t.value=r}}render(){if(!this._visible){this.shadowRoot.innerHTML="";return}this.shadowRoot.innerHTML=`
+    `}attachEvents(){const e=this.shadowRoot.querySelector("#priority-filter"),t=this.shadowRoot.querySelector("#due-date-filter");e.addEventListener("change",o=>{this.dispatchEvent(new CustomEvent("filter-change",{detail:{type:"priority",value:o.target.value},bubbles:!0,composed:!0}))}),t.addEventListener("change",o=>{this.dispatchEvent(new CustomEvent("filter-change",{detail:{type:"dueDate",value:o.target.value},bubbles:!0,composed:!0}))})}}customElements.define("filter-bar",L);class S extends HTMLElement{constructor(){super(),this.attachShadow({mode:"open"}),this._visible=!1,this._eventsAttached=!1}connectedCallback(){this.render()}show(){this._visible=!0,this._eventsAttached=!1,this.render(),this.attachEvents(),this.setDefaultValues(),setTimeout(()=>{const e=this.shadowRoot.querySelector("#task-name");e&&e.focus()},50)}hide(){this._visible=!1;const e=this._handleEsc;e&&document.removeEventListener("keydown",e),this.render()}setDefaultValues(){const e=this.shadowRoot.querySelector("#task-priority");e&&(e.value="HIGH");const t=this.shadowRoot.querySelector("#task-due-date");if(t){const o=new Date().toISOString().split("T")[0];t.value=o}}render(){if(!this._visible){this.shadowRoot.innerHTML="";return}this.shadowRoot.innerHTML=`
       <style>
         .modal-overlay {
           position: fixed;
@@ -1011,7 +1115,7 @@
           </form>
         </div>
       </div>
-    `}attachEvents(){const e=this.shadowRoot.querySelector("form"),t=this.shadowRoot.querySelector("#task-description"),r=this.shadowRoot.querySelector("#desc-count"),o=this.shadowRoot.querySelector('[data-action="close"]'),a=this.shadowRoot.querySelector('[data-action="cancel"]'),i=this.shadowRoot.querySelector('[data-action="overlay"]');if(!e)return;t&&r&&t.addEventListener("input",()=>{const d=t.value.length;r.textContent=`${d}/100`,r.className=`char-count ${d>=100?"error":d>=80?"warning":""}`});const n=()=>{this.hide()};o&&o.addEventListener("click",d=>{d.preventDefault(),d.stopPropagation(),n()}),a&&a.addEventListener("click",d=>{d.preventDefault(),d.stopPropagation(),n()}),i&&i.addEventListener("click",d=>{d.target===i&&n()}),e.addEventListener("submit",d=>{d.preventDefault(),this.handleSubmit()});const l=d=>{d.key==="Escape"&&(n(),document.removeEventListener("keydown",l),this._handleEsc=null)};document.addEventListener("keydown",l),this._handleEsc=l}handleSubmit(){const e=this.shadowRoot.querySelector("#task-name"),t=this.shadowRoot.querySelector("#task-description"),r=this.shadowRoot.querySelector("#task-priority"),o=this.shadowRoot.querySelector("#task-due-date"),a=this.shadowRoot.querySelector("#name-error");a&&(a.textContent="");const i=e.value.trim();if(!i){a&&(a.textContent="任务名称不能为空"),e.focus();return}const n={name:i,description:t.value.trim(),priority:r.value,dueDate:o.value||null};console.log("[TaskForm] Creating task:",n),this.dispatchEvent(new CustomEvent("task-create",{detail:n,bubbles:!0,composed:!0})),this.showToast("✅ 任务创建成功！"),this.resetForm(),this.hide()}showToast(e){const t=this.shadowRoot.querySelector(".toast");t&&t.remove();const r=document.createElement("div");r.className="toast",r.textContent=e,r.style.cssText=`
+    `}attachEvents(){const e=this.shadowRoot.querySelector("form"),t=this.shadowRoot.querySelector("#task-description"),o=this.shadowRoot.querySelector("#desc-count"),r=this.shadowRoot.querySelector('[data-action="close"]'),a=this.shadowRoot.querySelector('[data-action="cancel"]'),s=this.shadowRoot.querySelector('[data-action="overlay"]');if(!e)return;t&&o&&t.addEventListener("input",()=>{const d=t.value.length;o.textContent=`${d}/100`,o.className=`char-count ${d>=100?"error":d>=80?"warning":""}`});const i=()=>{this.hide()};r&&r.addEventListener("click",d=>{d.preventDefault(),d.stopPropagation(),i()}),a&&a.addEventListener("click",d=>{d.preventDefault(),d.stopPropagation(),i()}),s&&s.addEventListener("click",d=>{d.target===s&&i()}),e.addEventListener("submit",d=>{d.preventDefault(),this.handleSubmit()});const l=d=>{d.key==="Escape"&&(i(),document.removeEventListener("keydown",l),this._handleEsc=null)};document.addEventListener("keydown",l),this._handleEsc=l}handleSubmit(){const e=this.shadowRoot.querySelector("#task-name"),t=this.shadowRoot.querySelector("#task-description"),o=this.shadowRoot.querySelector("#task-priority"),r=this.shadowRoot.querySelector("#task-due-date"),a=this.shadowRoot.querySelector("#name-error");a&&(a.textContent="");const s=e.value.trim();if(!s){a&&(a.textContent="任务名称不能为空"),e.focus();return}const i={name:s,description:t.value.trim(),priority:o.value,dueDate:r.value||null};console.log("[TaskForm] Creating task:",i),this.dispatchEvent(new CustomEvent("task-create",{detail:i,bubbles:!0,composed:!0})),this.showToast("✅ 任务创建成功！"),this.resetForm(),this.hide()}showToast(e){const t=this.shadowRoot.querySelector(".toast");t&&t.remove();const o=document.createElement("div");o.className="toast",o.textContent=e,o.style.cssText=`
       position: fixed;
       bottom: 2rem;
       left: 50%;
@@ -1025,7 +1129,7 @@
       box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
       z-index: 9999;
       animation: slideUp 0.3s ease-out;
-    `;const o=document.createElement("style");o.textContent=`
+    `;const r=document.createElement("style");r.textContent=`
       @keyframes slideUp {
         from { opacity: 0; transform: translateX(-50%) translateY(20px); }
         to { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1034,5 +1138,5 @@
         from { opacity: 1; }
         to { opacity: 0; }
       }
-    `,this.shadowRoot.appendChild(o),this.shadowRoot.appendChild(r),setTimeout(()=>{r.style.animation="fadeOut 0.3s ease-out forwards",setTimeout(()=>r.remove(),300)},2500)}resetForm(){const e=this.shadowRoot.querySelector("form");e&&e.reset();const t=this.shadowRoot.querySelector("#desc-count");t&&(t.textContent="0/100")}}customElements.define("task-form",I);class b{constructor(){this.repository=new D,this.tasks=[],this.filters={priority:"",dueDate:""},this.taskForm=null}async init(){try{await this.loadTasks(),this.attachEvents(),this.render(),console.log("[App] Initialized successfully")}catch(e){console.error("[App] Initialization failed:",e)}}async loadTasks(){this.tasks=await this.repository.findAll(),console.log("[App] Loaded tasks:",this.tasks.length)}attachEvents(){this.taskForm=document.querySelector("task-form");const e=document.getElementById("add-task-btn");e&&e.addEventListener("click",()=>{console.log("[App] Add task button clicked"),this.taskForm&&this.taskForm.show()}),document.addEventListener("task-create",async r=>{console.log("[App] Received task-create event:",r.detail),await this.handleCreateTask(r.detail)});const t=()=>{const r=document.querySelector("task-list");r?(r.addEventListener("task-toggle",async o=>{await this.handleToggleTask(o.detail.id)}),r.addEventListener("task-edit",async o=>{await this.handleEditTask(o.detail)}),r.addEventListener("task-delete",async o=>{await this.handleDeleteTask(o.detail.id)}),console.log("[App] Task-list event listeners attached")):setTimeout(t,100)};t(),document.addEventListener("filter-change",r=>{this.handleFilterChange(r.detail)})}async handleCreateTask(e){try{const t=E(e);await this.repository.create(t),this.tasks.push(t),this.render(),console.log("[App] Task created:",t.id)}catch(t){console.error("[App] Failed to create task:",t),alert(`创建任务失败：${t.message}`)}}async handleToggleTask(e){console.log("[App] handleToggleTask called with taskId:",e);try{const t=this.tasks.find(a=>a.id===e);if(!t){console.error("[App] Task not found:",e);return}console.log("[App] Found task:",t),console.log("[App] Current completed status:",t.completed);const r=g(t,{completed:!t.completed});console.log("[App] Updated task:",r),await this.repository.update(r),console.log("[App] Task saved to repository");const o=this.tasks.findIndex(a=>a.id===e);this.tasks[o]=r,console.log("[App] Local state updated"),this.render(),console.log("[App] Render called, task toggled:",e)}catch(t){console.error("[App] Failed to toggle task:",t)}}async handleEditTask(e){console.log("[App] Received task-edit:",e);try{const t=this.tasks.find(a=>a.id===e.id);if(!t){console.error("[App] Task not found:",e.id);return}const r=g(t,{name:e.name,description:e.description,priority:e.priority});await this.repository.update(r);const o=this.tasks.findIndex(a=>a.id===e.id);this.tasks[o]=r,this.render(),console.log("[App] Task updated:",e.id)}catch(t){console.error("[App] Failed to edit task:",t),alert(`修改任务失败：${t.message}`)}}async handleDeleteTask(e){try{await this.repository.delete(e),this.tasks=this.tasks.filter(t=>t.id!==e),this.render(),console.log("[App] Task deleted:",e)}catch(t){console.error("[App] Failed to delete task:",t),alert(`删除任务失败：${t.message}`)}}handleFilterChange({type:e,value:t}){e==="priority"?this.filters.priority=t:e==="dueDate"&&(this.filters.dueDate=t),this.render(),console.log("[App] Filters updated:",this.filters)}getFilteredTasks(){let e=[...this.tasks];if(this.filters.priority&&(e=e.filter(t=>t.priority===this.filters.priority)),this.filters.dueDate){const t=new Date().toISOString().split("T")[0],r=new Date(Date.now()+7*24*60*60*1e3).toISOString().split("T")[0];switch(this.filters.dueDate){case"today":e=e.filter(o=>o.dueDate===t);break;case"upcoming":e=e.filter(o=>o.dueDate&&o.dueDate>=t&&o.dueDate<=r);break;case"overdue":e=e.filter(o=>o.dueDate&&o.dueDate<t&&!o.completed);break;case"none":e=e.filter(o=>!o.dueDate);break}}return e.sort((t,r)=>r.createdAt-t.createdAt),e}render(){const e=document.querySelector("task-list");if(e){const t=this.getFilteredTasks();e.tasks=t}}}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",()=>{window.app=new b,window.app.init()}):(window.app=new b,window.app.init());
-//# sourceMappingURL=main-BLY4O3q0.js.map
+    `,this.shadowRoot.appendChild(r),this.shadowRoot.appendChild(o),setTimeout(()=>{o.style.animation="fadeOut 0.3s ease-out forwards",setTimeout(()=>o.remove(),300)},2500)}resetForm(){const e=this.shadowRoot.querySelector("form");e&&e.reset();const t=this.shadowRoot.querySelector("#desc-count");t&&(t.textContent="0/100")}}customElements.define("task-form",S);class b{constructor(){this.repository=new D,this.tasks=[],this.filters={priority:"",dueDate:"",status:""},this.taskForm=null}async init(){try{await this.loadTasks(),this.attachEvents(),this.render(),console.log("[App] Initialized successfully")}catch(e){console.error("[App] Initialization failed:",e)}}async loadTasks(){this.tasks=await this.repository.findAll(),console.log("[App] Loaded tasks:",this.tasks.length)}attachEvents(){this.taskForm=document.querySelector("task-form");const e=document.getElementById("add-task-btn");e&&e.addEventListener("click",()=>{console.log("[App] Add task button clicked"),this.taskForm&&this.taskForm.show()}),document.addEventListener("task-create",async o=>{console.log("[App] Received task-create event:",o.detail),await this.handleCreateTask(o.detail)});const t=()=>{const o=document.querySelector("task-list");o?(o.addEventListener("task-toggle",async r=>{await this.handleToggleTask(r.detail.id)}),o.addEventListener("task-edit",async r=>{await this.handleEditTask(r.detail)}),o.addEventListener("task-delete",async r=>{await this.handleDeleteTask(r.detail.id)}),console.log("[App] Task-list event listeners attached")):setTimeout(t,100)};t(),document.addEventListener("filter-change",o=>{this.handleFilterChange(o.detail)}),document.addEventListener("task-filter-change",o=>{this.handleStatusFilterChange(o.detail)})}async handleCreateTask(e){try{const t=E(e);await this.repository.create(t),this.tasks.push(t),this.render(),console.log("[App] Task created:",t.id)}catch(t){console.error("[App] Failed to create task:",t),alert(`创建任务失败：${t.message}`)}}async handleToggleTask(e){console.log("[App] handleToggleTask called with taskId:",e);try{const t=this.tasks.find(a=>a.id===e);if(!t){console.error("[App] Task not found:",e);return}console.log("[App] Found task:",t),console.log("[App] Current completed status:",t.completed);const o=g(t,{completed:!t.completed});console.log("[App] Updated task:",o),await this.repository.update(o),console.log("[App] Task saved to repository");const r=this.tasks.findIndex(a=>a.id===e);this.tasks[r]=o,console.log("[App] Local state updated"),this.render(),console.log("[App] Render called, task toggled:",e)}catch(t){console.error("[App] Failed to toggle task:",t)}}async handleEditTask(e){console.log("[App] Received task-edit:",e);try{const t=this.tasks.find(a=>a.id===e.id);if(!t){console.error("[App] Task not found:",e.id);return}const o=g(t,{name:e.name,description:e.description,priority:e.priority});await this.repository.update(o);const r=this.tasks.findIndex(a=>a.id===e.id);this.tasks[r]=o,this.render(),console.log("[App] Task updated:",e.id)}catch(t){console.error("[App] Failed to edit task:",t),alert(`修改任务失败：${t.message}`)}}async handleDeleteTask(e){try{await this.repository.delete(e),this.tasks=this.tasks.filter(t=>t.id!==e),this.render(),console.log("[App] Task deleted:",e)}catch(t){console.error("[App] Failed to delete task:",t),alert(`删除任务失败：${t.message}`)}}handleFilterChange({type:e,value:t}){e==="priority"?this.filters.priority=t:e==="dueDate"&&(this.filters.dueDate=t),this.render(),console.log("[App] Filters updated:",this.filters)}handleStatusFilterChange({status:e}){this.filters.status=e,this.render(),console.log("[App] Status filter updated:",this.filters)}getFilteredTasks(){let e=[...this.tasks];if(this.filters.status==="completed"?e=e.filter(t=>t.completed):this.filters.status==="pending"&&(e=e.filter(t=>!t.completed)),this.filters.priority&&(e=e.filter(t=>t.priority===this.filters.priority)),this.filters.dueDate){const t=new Date().toISOString().split("T")[0],o=new Date(Date.now()+7*24*60*60*1e3).toISOString().split("T")[0];switch(this.filters.dueDate){case"today":e=e.filter(r=>r.dueDate===t);break;case"upcoming":e=e.filter(r=>r.dueDate&&r.dueDate>=t&&r.dueDate<=o);break;case"overdue":e=e.filter(r=>r.dueDate&&r.dueDate<t&&!r.completed);break;case"none":e=e.filter(r=>!r.dueDate);break}}return e.sort((t,o)=>o.createdAt-t.createdAt),e}render(){const e=document.querySelector("task-list");if(e){const t=this.getFilteredTasks();e.tasks=t}}}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",()=>{window.app=new b,window.app.init()}):(window.app=new b,window.app.init());
+//# sourceMappingURL=main-DSFSd0B5.js.map
