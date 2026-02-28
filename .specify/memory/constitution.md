@@ -1,50 +1,164 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+==================
+版本变更：2.0.0 → 2.1.0 (MINOR)
 
-## Core Principles
+MINOR 版本理由:
+- 全文翻译为中文
+- 原则内容保持不变，仅语言变更
+- 无原则增删或重新定义
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+修改的原则:
+- 全部原则：英文 → 中文（语义不变）
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+新增章节:
+- 无
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+移除章节:
+- 无
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+需要更新的模板:
+- ✅ .specify/templates/plan-template.md（Constitution Check 部分已对齐）
+- ✅ .specify/templates/spec-template.md（无需更改）
+- ✅ .specify/templates/tasks-template.md（无需更改）
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+后续待办:
+- 无
+-->
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+# My Task App 宪章
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## 核心原则
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### I. 任务驱动开发
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+每个功能始于清晰定义的任务。任务必须满足：
+- 原子化且可独立验证
+- 映射到用户价值或技术必要性
+- 从创建到完成全程可追踪
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+**理由**: 任务驱动方法确保专注度，支持并行工作，提供清晰的进度可见性。
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### II. 规范优先
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+未经批准的规范不得开始实现。规范必须包含：
+- 按优先级排序的用户场景（P1、P2、P3...）
+- 可衡量的成功标准
+- 清晰的验收条件
+
+**理由**: 前期清晰度防止返工，确保资源投入前达成一致。
+
+### III. 测试优先（不可协商）
+
+所有功能开发必须遵循 TDD，并满足定量要求：
+1. 先编写测试
+2. 用户批准测试场景
+3. 测试必须先失败
+4. 然后实现使测试通过
+5. 重构时保持测试绿色
+6. **测试覆盖率必须 ≥90%**（行覆盖率和分支覆盖率）
+
+**理由**: 测试优先开发确保设计正确性。90% 覆盖率阈值确保全面验证。
+
+### IV. 增量交付
+
+以独立、可测试的切片交付价值：
+- 每个用户故事必须可独立部署
+- MVP 优先，然后增强
+- 在检查点停止验证后再继续
+
+**理由**: 增量交付降低风险，支持早期反馈，提供灵活调整能力。
+
+### V. 文档即代码
+
+文档与代码同等对待：
+- 与功能一起存放在 `specs/###-feature/`
+- 与实现一起版本化
+- 必需产物：plan.md、spec.md、tasks.md
+- 可选产物：research.md、data-model.md、contracts/
+
+**理由**: 文档即代码确保知识持久化，入职流程顺畅。
+
+### VI. 原生 Web API 优先（不可协商）
+
+技术选型必须遵循以下优先级：
+1. **首选**: 原生 Web API（DOM、Fetch、Web Components 等）
+2. **次选**: 轻量级工具库（仅当 Web API 不足时）
+3. **禁止**: 无明确理由使用重型框架
+
+第三方依赖需要：
+- 在 spec.md 中记录理由
+- 打包体积影响分析
+- 替代方案评估（优先考虑原生 Web API）
+
+**理由**: 原生 Web API 减小打包体积，提高长期可维护性，避免供应商锁定。
+
+### VII. 性能优先（不可协商）
+
+UI 响应性是核心要求：
+- **所有用户交互的 UI 响应时间必须 <100ms**
+- 性能预算在 CI/CD 中强制执行
+- 性能回退 = Bug（P1 优先级）
+
+测量要求：
+- 追踪 Interaction-to-Next-Paint (INP)
+- 记录并优化长任务（>50ms）
+- 合同测试中包含性能指标
+
+**理由**: 100ms 以内响应创造即时反馈感知，对用户体验至关重要。
+
+## 技术标准
+
+**技术栈**:
+- 前端：原生 Web API（Vanilla JS、Web Components）
+- 测试：原生测试运行器或轻量级框架
+- 构建：最小化工具（Vite 或等效工具）
+
+**性能预算**:
+- 初始打包：<100KB（gzip 压缩后）
+- 可交互时间：<1s（3G 网络）
+- 内存：基线 <50MB
+
+## 开发工作流
+
+所有功能开发遵循 `.specify` 框架：
+
+1. **宪章更新** (`/speckit.constitution`) - 定义/更新原则
+2. **规范制定** (`/speckit.specify`) - 从用户输入创建功能规范
+3. **规划** (`/speckit.plan`) - 调研、设计、合同定义
+4. **任务生成** (`/speckit.tasks`) - 拆分为可执行任务
+5. **实现** (`/speckit.implement`) - 使用 TDD 执行任务
+6. **检查清单** (`/speckit.checklist`) - 验证合规性
+
+## 质量门禁
+
+任何 PR 合并前必须满足：
+
+- [ ] 验证宪章合规性
+- [ ] 用户批准规范
+- [ ] 所有测试通过（单元、集成、合同）
+- [ ] 测试覆盖率 ≥90%
+- [ ] 达到性能基准（<100ms UI 响应）
+- [ ] 文档完整且已更新
+- [ ] 任务追踪完成
+
+## 治理
+
+**权威性**: 本宪章优先于项目内所有其他开发实践。
+
+**修订流程**:
+1. 通过 `/speckit.constitution` 提出变更并附理由
+2. 记录版本 bump 类型（MAJOR/MINOR/PATCH）
+3. 更新所有受影响的模板和指南
+4. 在同步影响报告中记录变更
+
+**版本控制策略**:
+- MAJOR：向后不兼容的原则变更、新的不可协商约束
+- MINOR：新增原则或实质性指导扩展
+- PATCH：澄清、措辞改进、错字修复
+
+**合规审查**: 所有 PR 必须验证宪章合规性。违规行为需要在 plan.md 的 Complexity Tracking 部分记录明确理由。
+
+**例外**: 标记为 NON-NEGOTIABLE 的原则需要 MAJOR 版本 bump 和团队共识才能修改。
+
+**版本**: 2.1.0 | **批准日期**: 2026-02-27 | **最后修订**: 2026-02-27

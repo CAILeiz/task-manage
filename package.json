@@ -1,0 +1,29 @@
+{
+  "name": "task-manage",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "任务管理应用 - 原生 Web Components + IndexedDB",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "web-test-runner \"tests/**/*.test.js\" --node-resolve",
+    "publish42:10001": "vite build && rm -rf taskmanagehtml && mv dist taskmanagehtml && scp -r ./taskmanagehtml root@47.99.205.22:/usr/share/nginx/"
+  },
+  "devDependencies": {
+    "@web/dev-server-esbuild": "^1.0.5",
+    "@web/test-runner": "^0.20.2",
+    "chai": "^5.3.3",
+    "chai-datetime": "^1.8.1",
+    "vite": "^5.4.21"
+  },
+  "keywords": [
+    "task-management",
+    "web-components",
+    "indexeddb",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT"
+}
