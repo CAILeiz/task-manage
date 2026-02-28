@@ -45,47 +45,63 @@ export class TaskList extends HTMLElement {
       <style>
         :host {
           display: block;
+          --primary-50: #f5f3ff;
+          --primary-100: #ede9fe;
+          --primary-200: #ddd6fe;
+          --primary-300: #c4b5fd;
+          --primary-400: #a78bfa;
+          --primary-500: #8b5cf6;
+          --primary-600: #7c3aed;
+          --primary-700: #6d28d9;
+          
+          --success-50: #f0fdf4;
+          --success-500: #22c55e;
+          --success-600: #16a34a;
+          
+          --warning-50: #fffbeb;
+          --warning-500: #f59e0b;
+          --warning-600: #d97706;
+          
+          --danger-50: #fef2f2;
+          --danger-500: #ef4444;
+          --danger-600: #dc2626;
+          
+          --gray-50: #f9fafb;
+          --gray-100: #f3f4f6;
+          --gray-200: #e5e7eb;
+          --gray-300: #d1d5db;
+          --gray-400: #9ca3af;
+          --gray-500: #6b7280;
+          --gray-600: #4b5563;
+          --gray-700: #374151;
+          --gray-800: #1f2937;
+          --gray-900: #111827;
+          
+          --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+          --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+          --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+          --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          
+          --radius-sm: 0.375rem;
+          --radius-md: 0.5rem;
+          --radius-lg: 0.75rem;
+          --radius-xl: 1rem;
+          
+          --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+          --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .task-list {
           display: flex;
           flex-direction: column;
           background: white;
-          border-radius: 1rem;
           overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 4rem 2rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 1rem;
-          margin: 1rem;
-        }
-
-        .empty-state-icon {
-          font-size: 5rem;
-          margin-bottom: 1.5rem;
-          filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-        }
-
-        .empty-state-text {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: white;
-          margin-bottom: 0.5rem;
-        }
-
-        .empty-state-hint {
-          font-size: 1rem;
-          color: rgba(255, 255, 255, 0.8);
         }
 
         .stats {
           padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-bottom: 1px solid #e2e8f0;
+          background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+          border-bottom: 1px solid var(--gray-200);
           font-size: 0.875rem;
           display: flex;
           justify-content: space-between;
@@ -94,7 +110,7 @@ export class TaskList extends HTMLElement {
 
         .stats-left {
           display: flex;
-          gap: 1.25rem;
+          gap: 0.75rem;
           flex-wrap: wrap;
         }
 
@@ -102,54 +118,69 @@ export class TaskList extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.25rem 0.75rem;
+          padding: 0.375rem 0.875rem;
           border-radius: 9999px;
           background: white;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: var(--shadow-sm);
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all var(--transition-base);
           user-select: none;
+          font-weight: 500;
+          color: var(--gray-600);
+          border: 1px solid var(--gray-200);
         }
 
         .stat-item:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
         }
 
         .stat-item.completed {
-          color: #059669;
-          font-weight: 600;
+          color: var(--success-600);
         }
 
         .stat-item.completed:hover {
-          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          background: linear-gradient(135deg, var(--success-50) 0%, var(--success-50) 100%);
+          border-color: var(--success-500);
         }
 
         .stat-item.completed.active {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
           color: white;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+          border-color: transparent;
         }
 
         .stat-item.pending {
-          color: #d97706;
-          font-weight: 600;
+          color: var(--warning-600);
         }
 
         .stat-item.pending:hover {
-          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          background: linear-gradient(135deg, var(--warning-50) 0%, var(--warning-50) 100%);
+          border-color: var(--warning-500);
         }
 
         .stat-item.pending.active {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
           color: white;
           box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+          border-color: transparent;
+        }
+
+        .stat-item.all {
+          color: var(--primary-600);
+        }
+
+        .stat-item.all:hover {
+          background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-50) 100%);
+          border-color: var(--primary-400);
         }
 
         .stat-item.all.active {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
           color: white;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+          border-color: transparent;
         }
 
         /* Task Item Styles */
@@ -157,9 +188,9 @@ export class TaskList extends HTMLElement {
           display: flex;
           align-items: flex-start;
           gap: 1rem;
-          padding: 1.5rem;
-          border-bottom: 1px solid #f1f5f9;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: 1.25rem 1.5rem;
+          border-bottom: 1px solid var(--gray-100);
+          transition: all var(--transition-base);
           background: white;
           position: relative;
           overflow: hidden;
@@ -172,29 +203,29 @@ export class TaskList extends HTMLElement {
           left: 0;
           width: 4px;
           height: 100%;
-          background: linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 100%);
-          transition: all 0.3s;
+          background: var(--gray-300);
+          transition: all var(--transition-base);
         }
 
         .task-item.HIGH::before {
-          background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+          background: linear-gradient(180deg, var(--danger-500) 0%, var(--danger-600) 100%);
         }
 
         .task-item.MEDIUM::before {
-          background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(180deg, var(--warning-500) 0%, var(--warning-600) 100%);
         }
 
         .task-item.LOW::before {
-          background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(180deg, var(--success-500) 0%, var(--success-600) 100%);
         }
 
         .task-item:hover {
-          background: linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+          box-shadow: inset 0 0 0 1px var(--gray-200);
         }
 
         .task-item:hover::before {
-          width: 6px;
+          width: 5px;
         }
 
         .task-item:last-child {
@@ -202,30 +233,30 @@ export class TaskList extends HTMLElement {
         }
 
         .task-item.completed {
-          opacity: 0.7;
-          background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+          opacity: 0.75;
+          background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-50) 100%);
         }
 
         .task-item.completed .task-name {
           text-decoration: line-through;
-          color: #9ca3af;
+          color: var(--gray-400);
         }
 
         /* Priority Indicator */
         .priority-indicator {
-          width: 16px;
-          height: 16px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           flex-shrink: 0;
-          margin-top: 4px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-          transition: all 0.3s;
+          margin-top: 3px;
+          box-shadow: var(--shadow-sm);
+          transition: all var(--transition-base);
           border: 2px solid white;
         }
 
         .task-item:hover .priority-indicator {
-          transform: scale(1.15);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          transform: scale(1.1);
+          box-shadow: var(--shadow-md);
         }
 
         /* Task Content */
@@ -243,72 +274,74 @@ export class TaskList extends HTMLElement {
         }
 
         .task-name {
-          font-size: 1.0625rem;
+          font-size: 1rem;
           font-weight: 600;
-          color: #1f2937;
+          color: var(--gray-800);
           word-wrap: break-word;
           line-height: 1.5;
+          letter-spacing: -0.01em;
         }
 
         .task-description {
-          font-size: 0.9375rem;
-          color: #6b7280;
-          margin-bottom: 0.875rem;
+          font-size: 0.875rem;
+          color: var(--gray-500);
+          margin-bottom: 0.75rem;
           line-height: 1.6;
           word-wrap: break-word;
           padding: 0.5rem 0.75rem;
-          background: #f9fafb;
-          border-radius: 0.5rem;
-          border-left: 3px solid #e5e7eb;
+          background: var(--gray-50);
+          border-radius: var(--radius-md);
+          border-left: 3px solid var(--gray-200);
         }
 
         .task-meta {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.625rem;
+          gap: 0.5rem;
           align-items: center;
         }
 
         .priority-badge {
-          padding: 0.25rem 0.75rem;
+          padding: 0.25rem 0.625rem;
           border-radius: 9999px;
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
           font-weight: 700;
           color: white;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: var(--shadow-sm);
         }
 
         .priority-badge.HIGH {
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          background: linear-gradient(135deg, var(--danger-500) 0%, var(--danger-600) 100%);
         }
 
         .priority-badge.MEDIUM {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
         }
 
         .priority-badge.LOW {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
         }
 
         .due-date {
           display: flex;
           align-items: center;
           gap: 0.375rem;
-          font-size: 0.8125rem;
-          color: #4b5563;
+          font-size: 0.75rem;
+          color: var(--gray-600);
           padding: 0.25rem 0.625rem;
-          background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-          border-radius: 0.5rem;
+          background: var(--gray-100);
+          border-radius: var(--radius-md);
           font-weight: 500;
+          transition: all var(--transition-fast);
         }
 
         .due-date.overdue {
-          color: #dc2626;
+          color: var(--danger-600);
           font-weight: 600;
-          background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-          animation: pulse 2s infinite;
+          background: linear-gradient(135deg, var(--danger-50) 0%, var(--danger-50) 100%);
+          animation: pulse 2s ease-in-out infinite;
         }
 
         @keyframes pulse {
@@ -317,12 +350,12 @@ export class TaskList extends HTMLElement {
         }
 
         .created-time {
-          font-size: 0.8125rem;
-          color: #9ca3af;
+          font-size: 0.75rem;
+          color: var(--gray-400);
           font-weight: 500;
           padding: 0.25rem 0.5rem;
-          background: #f9fafb;
-          border-radius: 0.375rem;
+          background: var(--gray-50);
+          border-radius: var(--radius-sm);
         }
 
         /* Task Actions */
@@ -331,27 +364,28 @@ export class TaskList extends HTMLElement {
           flex-direction: column;
           gap: 0.5rem;
           flex-shrink: 0;
+          margin-left: 0.5rem;
         }
 
         .action-btn {
           padding: 0.5rem;
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          border: 1px solid #e2e8f0;
-          border-radius: 0.625rem;
+          background: var(--gray-50);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-md);
           cursor: pointer;
           font-size: 1.125rem;
-          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all var(--transition-base);
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
-          height: 40px;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          width: 38px;
+          height: 38px;
+          box-shadow: var(--shadow-sm);
         }
 
         .action-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          box-shadow: var(--shadow-md);
         }
 
         .action-btn:active {
@@ -359,18 +393,18 @@ export class TaskList extends HTMLElement {
         }
 
         .action-btn.toggle-complete:hover {
-          border-color: #10b981;
-          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          border-color: var(--success-500);
+          background: linear-gradient(135deg, var(--success-50) 0%, var(--success-50) 100%);
         }
 
         .action-btn.edit-task:hover {
-          border-color: #3b82f6;
-          background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+          border-color: var(--primary-400);
+          background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-50) 100%);
         }
 
         .action-btn.delete-task:hover {
-          border-color: #ef4444;
-          background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+          border-color: var(--danger-500);
+          background: linear-gradient(135deg, var(--danger-50) 0%, var(--danger-50) 100%);
         }
 
         /* Edit Modal */
@@ -380,12 +414,13 @@ export class TaskList extends HTMLElement {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           animation: fadeIn 0.2s ease-out;
         }
 
@@ -407,14 +442,15 @@ export class TaskList extends HTMLElement {
 
         .modal {
           background: white;
-          border-radius: 1.25rem;
-          padding: 1.75rem;
+          border-radius: var(--radius-xl);
+          padding: 1.5rem;
           width: 90%;
           max-width: 480px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          box-shadow: var(--shadow-2xl);
           animation: slideIn 0.3s ease-out;
           max-height: 90vh;
           overflow-y: auto;
+          border: 1px solid var(--gray-200);
         }
 
         .modal-header {
@@ -423,34 +459,34 @@ export class TaskList extends HTMLElement {
           align-items: center;
           margin-bottom: 1.25rem;
           padding-bottom: 0.875rem;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid var(--gray-200);
         }
 
         .modal-title {
           font-size: 1.25rem;
           font-weight: 700;
-          color: #1f2937;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: var(--gray-800);
+          letter-spacing: -0.025em;
         }
 
         .modal-close {
-          background: transparent;
+          background: var(--gray-100);
           border: none;
-          font-size: 1.75rem;
-          color: #9ca3af;
+          width: 32px;
+          height: 32px;
+          border-radius: var(--radius-md);
+          font-size: 1.25rem;
+          color: var(--gray-500);
           cursor: pointer;
-          padding: 0.25rem;
-          line-height: 1;
-          transition: all 0.2s;
-          border-radius: 0.5rem;
+          transition: all var(--transition-fast);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .modal-close:hover {
-          color: #1f2937;
-          background: #f3f4f6;
+          color: var(--gray-700);
+          background: var(--gray-200);
         }
 
         .form-group {
@@ -461,8 +497,9 @@ export class TaskList extends HTMLElement {
           display: block;
           font-size: 0.875rem;
           font-weight: 600;
-          color: #374151;
+          color: var(--gray-700);
           margin-bottom: 0.375rem;
+          letter-spacing: -0.01em;
         }
 
         .form-group input,
@@ -470,12 +507,12 @@ export class TaskList extends HTMLElement {
         .form-group select {
           width: 100%;
           padding: 0.625rem 0.875rem;
-          border: 2px solid #e5e7eb;
-          border-radius: 0.625rem;
+          border: 1.5px solid var(--gray-300);
+          border-radius: var(--radius-md);
           font-size: 0.9375rem;
           font-family: inherit;
-          transition: all 0.2s;
-          background: #f9fafb;
+          transition: all var(--transition-fast);
+          background: var(--gray-50);
           box-sizing: border-box;
         }
 
@@ -483,8 +520,8 @@ export class TaskList extends HTMLElement {
         .form-group textarea:focus,
         .form-group select:focus {
           outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+          border-color: var(--primary-500);
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
           background: white;
         }
 
@@ -497,18 +534,18 @@ export class TaskList extends HTMLElement {
 
         .char-count {
           font-size: 0.75rem;
-          color: #9ca3af;
+          color: var(--gray-400);
           text-align: right;
           margin-top: 0.25rem;
           font-weight: 500;
         }
 
         .char-count.warning {
-          color: #f59e0b;
+          color: var(--warning-500);
         }
 
         .char-count.error {
-          color: #ef4444;
+          color: var(--danger-500);
         }
 
         .modal-actions {
@@ -517,36 +554,36 @@ export class TaskList extends HTMLElement {
           justify-content: flex-end;
           margin-top: 1.25rem;
           padding-top: 0.875rem;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid var(--gray-200);
         }
 
         .btn {
           padding: 0.625rem 1.25rem;
-          border-radius: 0.625rem;
+          border-radius: var(--radius-md);
           font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all var(--transition-base);
           border: none;
         }
 
         .btn-cancel {
-          background: #f3f4f6;
-          color: #4b5563;
+          background: var(--gray-100);
+          color: var(--gray-600);
         }
 
         .btn-cancel:hover {
-          background: #e5e7eb;
+          background: var(--gray-200);
         }
 
         .btn-save {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
           color: white;
-          box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
         }
 
         .btn-save:hover {
-          box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
           transform: translateY(-1px);
         }
 
@@ -559,19 +596,25 @@ export class TaskList extends HTMLElement {
             flex-direction: row;
             width: 100%;
             justify-content: flex-end;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--gray-100);
           }
 
           .stats {
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.625rem;
             align-items: flex-start;
           }
 
           .stats-left {
             flex-wrap: wrap;
+            width: 100%;
+            justify-content: center;
+          }
+          
+          .task-item {
+            padding: 1rem;
           }
         }
       </style>
@@ -711,47 +754,69 @@ export class TaskList extends HTMLElement {
       <style>
         :host {
           display: block;
+          --primary-50: #f5f3ff;
+          --primary-100: #ede9fe;
+          --primary-500: #8b5cf6;
+          --primary-600: #7c3aed;
+          --gray-50: #f9fafb;
+          --gray-100: #f3f4f6;
+          --gray-200: #e5e7eb;
+          --gray-300: #d1d5db;
+          --gray-400: #9ca3af;
+          --gray-500: #6b7280;
+          --gray-600: #4b5563;
+          --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+          --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+          --radius-md: 0.5rem;
+          --radius-lg: 0.75rem;
+          --radius-xl: 1rem;
+          --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .empty-state {
           text-align: center;
-          padding: 3rem 1.5rem;
-          color: #6b7280;
-          background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-          border-radius: 1rem;
+          padding: 4rem 2rem;
+          color: var(--gray-500);
+          background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+          border-radius: var(--radius-xl);
           margin: 1rem;
+          border: 1px dashed var(--gray-300);
         }
 
         .empty-state-icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
+          font-size: 4.5rem;
+          margin-bottom: 1.25rem;
+          opacity: 0.6;
+          filter: grayscale(0.3);
         }
 
         .empty-state-text {
           font-size: 1.25rem;
-          color: #9ca3af;
+          font-weight: 600;
+          color: var(--gray-600);
+          margin-bottom: 0.5rem;
         }
 
         .empty-state-hint {
           font-size: 0.875rem;
-          margin-top: 0.5rem;
-          color: #d1d5db;
+          color: var(--gray-400);
         }
 
         .stats {
           padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          border-radius: 1rem;
+          background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+          border-radius: var(--radius-xl);
           margin: 1rem;
           font-size: 0.875rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
+          border: 1px solid var(--gray-200);
         }
 
         .stats-left {
           display: flex;
-          gap: 1.25rem;
+          gap: 0.75rem;
           flex-wrap: wrap;
           width: 100%;
           justify-content: center;
@@ -761,24 +826,28 @@ export class TaskList extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.25rem 0.75rem;
+          padding: 0.375rem 0.875rem;
           border-radius: 9999px;
           background: white;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: var(--shadow-sm);
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all var(--transition-base);
           user-select: none;
+          font-weight: 500;
+          color: var(--gray-600);
+          border: 1px solid var(--gray-200);
         }
 
         .stat-item:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
         }
 
         .stat-item.all.active {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
           color: white;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+          border-color: transparent;
         }
       </style>
 
@@ -799,7 +868,7 @@ export class TaskList extends HTMLElement {
       <div class="empty-state">
         <div class="empty-state-icon">📝</div>
         <div class="empty-state-text">暂无任务，创建一个吧！</div>
-        <div class="empty-state-hint">点击上方表单添加新任务</div>
+        <div class="empty-state-hint">点击上方"新建任务"按钮添加第一个任务</div>
       </div>
     `;
 

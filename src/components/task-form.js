@@ -62,19 +62,67 @@ export class TaskForm extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
+        :host {
+          --primary-50: #f5f3ff;
+          --primary-100: #ede9fe;
+          --primary-200: #ddd6fe;
+          --primary-300: #c4b5fd;
+          --primary-400: #a78bfa;
+          --primary-500: #8b5cf6;
+          --primary-600: #7c3aed;
+          --primary-700: #6d28d9;
+          
+          --success-50: #f0fdf4;
+          --success-500: #22c55e;
+          --success-600: #16a34a;
+          
+          --warning-50: #fffbeb;
+          --warning-500: #f59e0b;
+          --warning-600: #d97706;
+          
+          --danger-50: #fef2f2;
+          --danger-500: #ef4444;
+          --danger-600: #dc2626;
+          
+          --gray-50: #f9fafb;
+          --gray-100: #f3f4f6;
+          --gray-200: #e5e7eb;
+          --gray-300: #d1d5db;
+          --gray-400: #9ca3af;
+          --gray-500: #6b7280;
+          --gray-600: #4b5563;
+          --gray-700: #374151;
+          --gray-800: #1f2937;
+          
+          --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+          --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+          --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+          --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+          --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          
+          --radius-sm: 0.375rem;
+          --radius-md: 0.5rem;
+          --radius-lg: 0.75rem;
+          --radius-xl: 1rem;
+          
+          --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+          --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .modal-overlay {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.4);
+          background: rgba(0, 0, 0, 0.45);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
-          backdrop-filter: blur(8px);
-          animation: fadeIn 0.2s ease-out;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          animation: fadeIn 0.25s ease-out;
         }
 
         @keyframes fadeIn {
@@ -93,61 +141,75 @@ export class TaskForm extends HTMLElement {
           }
         }
 
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .modal {
           background: white;
-          border-radius: 1.25rem;
+          border-radius: var(--radius-xl);
           padding: 1.5rem;
           width: 90%;
-          max-width: 480px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-          animation: slideIn 0.3s ease-out;
+          max-width: 500px;
+          box-shadow: var(--shadow-2xl);
+          animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           max-height: 90vh;
           overflow-y: auto;
           box-sizing: border-box;
+          border: 1px solid var(--gray-200);
         }
 
         .modal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1rem;
-          padding-bottom: 0.75rem;
-          border-bottom: 1px solid #e2e8f0;
+          margin-bottom: 1.25rem;
+          padding-bottom: 0.875rem;
+          border-bottom: 1px solid var(--gray-200);
         }
 
         .modal-title {
-          font-size: 1.25rem;
+          font-size: 1.375rem;
           font-weight: 700;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: var(--gray-800);
+          letter-spacing: -0.025em;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
 
         .modal-close {
-          background: #f1f5f9;
+          background: var(--gray-100);
           border: none;
-          width: 32px;
-          height: 32px;
-          border-radius: 0.5rem;
+          width: 34px;
+          height: 34px;
+          border-radius: var(--radius-md);
           font-size: 1.25rem;
-          color: #64748b;
+          color: var(--gray-500);
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all var(--transition-fast);
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .modal-close:hover {
-          background: #e2e8f0;
-          color: #1e293b;
+          background: var(--gray-200);
+          color: var(--gray-700);
+          transform: rotate(90deg);
         }
 
         .form {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.125rem;
         }
 
         .form-group {
@@ -158,8 +220,16 @@ export class TaskForm extends HTMLElement {
         .form-group label {
           font-size: 0.875rem;
           font-weight: 600;
-          color: #374151;
+          color: var(--gray-700);
           margin-bottom: 0.375rem;
+          letter-spacing: -0.01em;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .form-group label .required {
+          color: var(--danger-500);
         }
 
         .form-group input,
@@ -167,97 +237,144 @@ export class TaskForm extends HTMLElement {
         .form-group select {
           width: 100%;
           padding: 0.625rem 0.875rem;
-          border: 2px solid #e2e8f0;
-          border-radius: 0.625rem;
-          font-size: 0.875rem;
+          border: 1.5px solid var(--gray-300);
+          border-radius: var(--radius-md);
+          font-size: 0.9375rem;
           font-family: inherit;
-          transition: all 0.2s;
-          background: #f8fafc;
+          transition: all var(--transition-fast);
+          background: var(--gray-50);
           box-sizing: border-box;
+        }
+
+        .form-group input:hover,
+        .form-group textarea:hover,
+        .form-group select:hover {
+          border-color: var(--gray-400);
         }
 
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
           outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+          border-color: var(--primary-500);
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
           background: white;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+          color: var(--gray-400);
         }
 
         .form-group textarea {
           resize: vertical;
-          min-height: 80px;
-          max-height: 150px;
-          line-height: 1.5;
+          min-height: 90px;
+          max-height: 180px;
+          line-height: 1.6;
         }
 
         .form-row {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1.25fr 1fr;
           gap: 1rem;
         }
 
         .char-count {
           font-size: 0.75rem;
-          color: #94a3b8;
+          color: var(--gray-400);
           text-align: right;
           margin-top: 0.25rem;
           font-weight: 500;
+          transition: color var(--transition-fast);
         }
 
         .char-count.warning {
-          color: #f59e0b;
+          color: var(--warning-500);
         }
 
         .char-count.error {
-          color: #ef4444;
+          color: var(--danger-500);
         }
 
         .error {
-          color: #ef4444;
-          font-size: 0.875rem;
-          margin-top: 0.25rem;
+          color: var(--danger-500);
+          font-size: 0.8125rem;
+          margin-top: 0.375rem;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .error::before {
+          content: '⚠️';
+          font-size: 0.75rem;
         }
 
         .modal-actions {
           display: flex;
-          gap: 0.625rem;
+          gap: 0.75rem;
           justify-content: flex-end;
-          margin-top: 1rem;
-          padding-top: 0.75rem;
-          border-top: 1px solid #e2e8f0;
+          margin-top: 0.25rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--gray-200);
         }
 
         .btn {
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          font-size: 0.8125rem;
+          padding: 0.625rem 1.375rem;
+          border-radius: var(--radius-lg);
+          font-size: 0.875rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all var(--transition-base);
           border: none;
           box-sizing: border-box;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.375rem;
         }
 
         .btn-cancel {
-          background: #f1f5f9;
-          color: #475569;
+          background: var(--gray-100);
+          color: var(--gray-600);
         }
 
         .btn-cancel:hover {
-          background: #e2e8f0;
+          background: var(--gray-200);
         }
 
         .btn-create {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
           color: white;
-          box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
         }
 
         .btn-create:hover {
-          box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
           transform: translateY(-1px);
+          background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+        }
+
+        .btn-create:active {
+          transform: translateY(0);
+        }
+
+        /* Toast notification */
+        .toast {
+          position: fixed;
+          bottom: 2rem;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+          color: white;
+          padding: 0.875rem 1.5rem;
+          border-radius: var(--radius-xl);
+          font-size: 0.9375rem;
+          font-weight: 600;
+          box-shadow: 0 10px 40px rgba(34, 197, 94, 0.4);
+          z-index: 9999;
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @media (max-width: 640px) {
@@ -278,6 +395,7 @@ export class TaskForm extends HTMLElement {
           .btn {
             width: 100%;
             text-align: center;
+            padding: 0.75rem 1rem;
           }
         }
       </style>
@@ -285,18 +403,18 @@ export class TaskForm extends HTMLElement {
       <div class="modal-overlay" data-action="overlay">
         <div class="modal">
           <div class="modal-header">
-            <h3 class="modal-title">➕ 新建任务</h3>
+            <h3 class="modal-title"><span>✨</span> 新建任务</h3>
             <button class="modal-close" data-action="close" title="关闭">×</button>
           </div>
 
           <form class="form" novalidate>
             <div class="form-group">
-              <label for="task-name">任务名称</label>
+              <label for="task-name">任务名称 <span class="required">*</span></label>
               <input
                 type="text"
                 id="task-name"
                 name="name"
-                placeholder="输入任务名称..."
+                placeholder="例如：完成项目报告"
                 required
                 minlength="1"
                 maxlength="200"
@@ -305,13 +423,13 @@ export class TaskForm extends HTMLElement {
             </div>
 
             <div class="form-group">
-              <label for="task-description">任务描述 <span style="font-weight: 400; color: #94a3b8;">(可选，最多 100 字)</span></label>
+              <label for="task-description">任务描述 <span style="font-weight: 400; color: var(--gray-400);">(可选，最多 100 字)</span></label>
               <textarea
                 id="task-description"
                 name="description"
-                placeholder="输入任务描述..."
+                placeholder="详细描述任务内容..."
                 maxlength="100"
-                rows="2"
+                rows="3"
               ></textarea>
               <div class="char-count" id="desc-count">0/100</div>
             </div>
@@ -320,9 +438,9 @@ export class TaskForm extends HTMLElement {
               <div class="form-group">
                 <label for="task-priority">优先级</label>
                 <select id="task-priority" name="priority">
-                  <option value="HIGH">高</option>
-                  <option value="MEDIUM">中</option>
-                  <option value="LOW">低</option>
+                  <option value="HIGH">🔴 高</option>
+                  <option value="MEDIUM">🟡 中</option>
+                  <option value="LOW">🟢 低</option>
                 </select>
               </div>
 
@@ -337,8 +455,12 @@ export class TaskForm extends HTMLElement {
             </div>
 
             <div class="modal-actions">
-              <button type="button" class="btn btn-cancel" data-action="cancel">取消</button>
-              <button type="submit" class="btn btn-create">创建任务</button>
+              <button type="button" class="btn btn-cancel" data-action="cancel">
+                <span>✕</span> 取消
+              </button>
+              <button type="submit" class="btn btn-create">
+                <span>✓</span> 创建任务
+              </button>
             </div>
           </form>
         </div>
