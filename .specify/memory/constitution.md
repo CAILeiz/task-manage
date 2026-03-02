@@ -26,7 +26,7 @@ MINOR 版本理由:
 - 无
 -->
 
-# My Task App 宪章
+# task manage 宪章
 
 ## 核心原则
 
