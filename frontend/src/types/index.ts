@@ -78,4 +78,5 @@ export interface TaskQueryParams {
   priority?: Priority;
   completed?: boolean;
   dueDateFilter?: 'today' | 'upcoming' | 'overdue' | 'none';
+  search?: string;
 }

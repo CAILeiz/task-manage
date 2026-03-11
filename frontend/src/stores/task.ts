@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskQueryParams, Priority } from '../types';
+import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskQueryParams } from '../types';
 import * as taskApi from '../api/task';
+
+interface TaskCounts {
+  all: number;
+  today: number;
+  overdue: number;
+  upcoming: number;
+  none: number;
+  completed: number;
+}
 
 export const useTaskStore = defineStore('task', () => {
   const tasks = ref<Task[]>([]);
@@ -10,6 +19,15 @@ export const useTaskStore = defineStore('task', () => {
   const limit = ref(20);
   const loading = ref(false);
   const filter = ref<TaskQueryParams>({});
+  const searchQuery = ref('');
+  const taskCounts = ref<TaskCounts>({
+    all: 0,
+    today: 0,
+    overdue: 0,
+    upcoming: 0,
+    none: 0,
+    completed: 0,
+  });
 
   const totalPages = computed(() => Math.ceil(total.value / limit.value));
 
@@ -98,6 +116,36 @@ export const useTaskStore = defineStore('task', () => {
     fetchTasks();
   }
 
+  function setSearchQuery(query: string) {
+    searchQuery.value = query;
+    page.value = 1;
+    fetchTasks({ search: query });
+  }
+
+  async function fetchTaskCounts() {
+    try {
+      const [allRes, todayRes, overdueRes, upcomingRes, noneRes, completedRes] = await Promise.all([
+        taskApi.getTasks({ limit: 1 }),
+        taskApi.getTasks({ dueDateFilter: 'today', limit: 1 }),
+        taskApi.getTasks({ dueDateFilter: 'overdue', limit: 1 }),
+        taskApi.getTasks({ dueDateFilter: 'upcoming', limit: 1 }),
+        taskApi.getTasks({ dueDateFilter: 'none', limit: 1 }),
+        taskApi.getTasks({ completed: true, limit: 1 }),
+      ]);
+
+      taskCounts.value = {
+        all: allRes.data?.total || 0,
+        today: todayRes.data?.total || 0,
+        overdue: overdueRes.data?.total || 0,
+        upcoming: upcomingRes.data?.total || 0,
+        none: noneRes.data?.total || 0,
+        completed: completedRes.data?.total || 0,
+      };
+    } catch (error) {
+      console.error('Failed to fetch task counts:', error);
+    }
+  }
+
   return {
     tasks,
     total,
@@ -106,6 +154,8 @@ export const useTaskStore = defineStore('task', () => {
     loading,
     totalPages,
     filter,
+    searchQuery,
+    taskCounts,
     fetchTasks,
     createTask,
     updateTask,
@@ -114,5 +164,7 @@ export const useTaskStore = defineStore('task', () => {
     setPage,
     setFilter,
     clearFilter,
+    setSearchQuery,
+    fetchTaskCounts,
   };
 });
