@@ -1,0 +1,119 @@
+@import './variables.css';
+
+/* Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  line-height: var(--line-height-normal);
+}
+
+/* Utility Classes */
+.card-shadow {
+  box-shadow: var(--shadow-card);
+}
+
+.card-shadow-hover {
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.card-shadow-hover:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.transition-base {
+  transition: all var(--transition-base);
+}
+
+.transition-transform {
+  transition: transform var(--transition-base);
+}
+
+/* Priority Border Utilities */
+.border-priority-HIGH,
+.border-priority-high {
+  border-left: 4px solid var(--priority-high);
+}
+
+.border-priority-MEDIUM,
+.border-priority-medium {
+  border-left: 4px solid var(--priority-medium);
+}
+
+.border-priority-LOW,
+.border-priority-low {
+  border-left: 4px solid var(--priority-low);
+}
+
+/* Status Colors for Tags */
+.status-pending {
+  --el-tag-bg-color: #f3f4f6;
+  --el-tag-text-color: var(--status-pending);
+}
+
+.status-in-progress {
+  --el-tag-bg-color: #eff6ff;
+  --el-tag-text-color: var(--status-progress);
+}
+
+.status-completed {
+  --el-tag-bg-color: #ecfdf5;
+  --el-tag-text-color: var(--status-completed);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-base);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Focus Styles */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Link Styles */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--primary-light);
+  color: var(--text-inverse);
+}
