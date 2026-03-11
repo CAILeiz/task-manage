@@ -1,72 +1,106 @@
 <template>
   <el-container class="layout-container">
-    <el-header>
+    <el-header class="app-header">
       <div class="header-content">
         <div class="logo">
-          <h2>任务管理</h2>
+          <el-icon class="logo-icon"><List /></el-icon>
+          <h1>TaskFlow</h1>
         </div>
-        <div class="user-info" v-if="authStore.isLoggedIn">
-          <span>{{ authStore.user?.username }}</span>
-          <el-button type="danger" size="small" @click="logout">退出</el-button>
+        <div class="header-right">
+          <el-badge :value="notificationCount" :hidden="notificationCount === 0" class="notification-badge">
+            <el-button :icon="Bell" circle />
+          </el-badge>
+          <UserMenu v-if="authStore.isLoggedIn" />
         </div>
       </div>
     </el-header>
-    <el-main>
-      <router-view />
-    </el-main>
+    <el-container class="main-container">
+      <Sidebar v-if="authStore.isLoggedIn" />
+      <el-main class="app-main">
+        <router-view />
+      </el-main>
+    </el-container>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { useAuthStore } from '../../stores/auth';
+import { ref } from 'vue'
+import { List, Bell } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
+import UserMenu from './UserMenu.vue'
+import Sidebar from './Sidebar.vue'
 
-const router = useRouter();
-const authStore = useAuthStore();
-
-function logout() {
-  authStore.logout();
-  ElMessage.success('已退出登录');
-  router.push('/login');
-}
+const authStore = useAuthStore()
+const notificationCount = ref(0)
 </script>
 
 <style scoped>
 .layout-container {
   min-height: 100vh;
+  background-color: var(--bg-secondary);
 }
 
-.el-header {
-  background-color: #409eff;
+.app-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  line-height: 60px;
+  height: 64px !important;
+  padding: 0;
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  height: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 var(--spacing-lg);
 }
 
-.logo h2 {
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.logo-icon {
+  font-size: 28px;
+}
+
+.logo h1 {
   margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.notification-badge :deep(.el-button) {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
   color: white;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+.notification-badge :deep(.el-button:hover) {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.el-main {
-  background-color: #f5f5f5;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+.main-container {
+  height: calc(100vh - 64px);
+}
+
+.app-main {
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  overflow-y: auto;
 }
 </style>

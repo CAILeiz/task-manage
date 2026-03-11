@@ -1,10 +1,27 @@
 <template>
   <div class="tasks-page">
     <div class="page-header">
-      <h1>任务管理</h1>
-      <el-button type="primary" @click="showCreateDialog = true">
-        <el-icon><Plus /></el-icon> 新建任务
-      </el-button>
+      <div class="header-left">
+        <h1>{{ pageTitle }}</h1>
+        <el-tag v-if="taskStore.total > 0" type="info" size="large">
+          {{ taskStore.total }} 个任务
+        </el-tag>
+      </div>
+      <div class="header-right">
+        <el-radio-group v-model="viewMode" size="small">
+          <el-radio-button value="card">
+            <el-icon><Grid /></el-icon>
+            卡片
+          </el-radio-button>
+          <el-radio-button value="table">
+            <el-icon><List /></el-icon>
+            列表
+          </el-radio-button>
+        </el-radio-group>
+        <el-button type="primary" @click="showCreateDialog = true">
+          <el-icon><Plus /></el-icon> 新建任务
+        </el-button>
+      </div>
     </div>
 
     <div class="filter-bar">
@@ -26,10 +43,30 @@
       <el-button @click="clearFilter">清除筛选</el-button>
     </div>
 
-    <el-table :data="taskStore.tasks" v-loading="taskStore.loading" stripe>
+    <div v-if="viewMode === 'card'" class="tasks-card-view" v-loading="taskStore.loading">
+      <TaskCard
+        v-for="task in taskStore.tasks"
+        :key="task.id"
+        :task="task"
+        @edit="editTask"
+        @delete="deleteTask"
+      />
+      <el-empty v-if="!taskStore.loading && taskStore.tasks.length === 0" description="暂无任务" />
+    </div>
+
+    <el-table 
+      v-else
+      :data="taskStore.tasks" 
+      v-loading="taskStore.loading" 
+      stripe
+      class="tasks-table"
+    >
       <el-table-column prop="name" label="任务名称" min-width="200">
         <template #default="{ row }">
-          <span :class="{ 'completed-task': row.completed }">{{ row.name }}</span>
+          <div class="task-name-cell">
+            <span :class="{ 'completed-task': row.completed }">{{ row.name }}</span>
+            <span v-if="row.description" class="task-desc-preview">{{ row.description }}</span>
+          </div>
         </template>
       </el-table-column>
       <el-table-column prop="priority" label="优先级" width="100">
@@ -78,14 +115,12 @@
       />
     </div>
 
-    <!-- 创建任务弹窗 -->
     <TaskDialog
       v-model:visible="showCreateDialog"
       title="新建任务"
       @submit="handleCreate"
     />
 
-    <!-- 编辑任务弹窗 -->
     <TaskDialog
       v-model:visible="showEditDialog"
       title="编辑任务"
@@ -96,35 +131,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
-import { useTaskStore } from '../../stores/task';
-import type { Task, Priority, CreateTaskRequest, UpdateTaskRequest } from '../../types';
-import TaskDialog from '../../components/Task/TaskDialog.vue';
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Grid, List } from '@element-plus/icons-vue'
+import { useTaskStore } from '@/stores/task'
+import type { Task, Priority, CreateTaskRequest, UpdateTaskRequest } from '@/types'
+import TaskDialog from '@/components/Task/TaskDialog.vue'
+import TaskCard from '@/components/Task/TaskCard.vue'
 
-const taskStore = useTaskStore();
-const showCreateDialog = ref(false);
-const showEditDialog = ref(false);
-const editingTask = ref<Task | undefined>(undefined);
+const taskStore = useTaskStore()
+const showCreateDialog = ref(false)
+const showEditDialog = ref(false)
+const editingTask = ref<Task | undefined>(undefined)
+const viewMode = ref<'card' | 'table'>('card')
 
 const filter = reactive({
   priority: undefined as Priority | undefined,
   completed: undefined as boolean | undefined,
   dueDateFilter: undefined as 'today' | 'upcoming' | 'overdue' | 'none' | undefined,
-});
+})
+
+const pageTitle = computed(() => {
+  if (filter.dueDateFilter === 'today') return '今日任务'
+  if (filter.dueDateFilter === 'overdue') return '过期任务'
+  if (filter.dueDateFilter === 'upcoming') return '即将到期'
+  if (filter.dueDateFilter === 'none') return '无期限任务'
+  return '全部任务'
+})
 
 onMounted(() => {
-  taskStore.fetchTasks();
-});
+  taskStore.fetchTasks()
+})
 
 function getPriorityType(priority: Priority) {
   const map: Record<Priority, string> = {
     HIGH: 'danger',
     MEDIUM: 'warning',
     LOW: 'success',
-  };
-  return map[priority];
+  }
+  return map[priority]
 }
 
 function getPriorityLabel(priority: Priority) {
@@ -132,72 +177,72 @@ function getPriorityLabel(priority: Priority) {
     HIGH: '高',
     MEDIUM: '中',
     LOW: '低',
-  };
-  return map[priority];
+  }
+  return map[priority]
 }
 
 function formatDate(dateStr: string | null) {
-  if (!dateStr) return '无';
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}/${date.getDate()}`;
+  if (!dateStr) return '无'
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
 function getDueDateClass(task: Task) {
-  if (!task.dueDate || task.completed) return '';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(task.dueDate);
-  if (dueDate < today) return 'overdue';
-  const nextWeek = new Date(today);
-  nextWeek.setDate(today.getDate() + 7);
-  if (dueDate <= nextWeek) return 'upcoming';
-  return '';
+  if (!task.dueDate || task.completed) return ''
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dueDate = new Date(task.dueDate)
+  if (dueDate < today) return 'overdue'
+  const nextWeek = new Date(today)
+  nextWeek.setDate(today.getDate() + 7)
+  if (dueDate <= nextWeek) return 'upcoming'
+  return ''
 }
 
 function applyFilter() {
-  taskStore.setFilter(filter);
+  taskStore.setFilter(filter)
 }
 
 function clearFilter() {
-  filter.priority = undefined;
-  filter.completed = undefined;
-  filter.dueDateFilter = undefined;
-  taskStore.clearFilter();
+  filter.priority = undefined
+  filter.completed = undefined
+  filter.dueDateFilter = undefined
+  taskStore.clearFilter()
 }
 
 async function toggleComplete(task: Task) {
-  const result = await taskStore.toggleComplete(task);
+  const result = await taskStore.toggleComplete(task)
   if (result.success) {
-    ElMessage.success(task.completed ? '已标记为未完成' : '已标记为完成');
+    ElMessage.success(task.completed ? '已标记为未完成' : '已标记为完成')
   } else {
-    ElMessage.error(result.message || '操作失败');
+    ElMessage.error(result.message || '操作失败')
   }
 }
 
 function editTask(task: Task) {
-  editingTask.value = task;
-  showEditDialog.value = true;
+  editingTask.value = task
+  showEditDialog.value = true
 }
 
 async function handleCreate(data: CreateTaskRequest) {
-  const result = await taskStore.createTask(data);
+  const result = await taskStore.createTask(data)
   if (result.success) {
-    ElMessage.success('任务创建成功');
-    showCreateDialog.value = false;
+    ElMessage.success('任务创建成功')
+    showCreateDialog.value = false
   } else {
-    ElMessage.error(result.message || '创建失败');
+    ElMessage.error(result.message || '创建失败')
   }
 }
 
 async function handleUpdate(data: UpdateTaskRequest) {
-  if (!editingTask.value) return;
-  const result = await taskStore.updateTask(editingTask.value.id, data);
+  if (!editingTask.value) return
+  const result = await taskStore.updateTask(editingTask.value.id, data)
   if (result.success) {
-    ElMessage.success('任务更新成功');
-    showEditDialog.value = false;
-    editingTask.value = undefined;
+    ElMessage.success('任务更新成功')
+    showEditDialog.value = false
+    editingTask.value = undefined
   } else {
-    ElMessage.error(result.message || '更新失败');
+    ElMessage.error(result.message || '更新失败')
   }
 }
 
@@ -207,12 +252,12 @@ async function deleteTask(task: Task) {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    });
-    const result = await taskStore.deleteTask(task.id);
+    })
+    const result = await taskStore.deleteTask(task.id)
     if (result.success) {
-      ElMessage.success('任务已删除');
+      ElMessage.success('任务已删除')
     } else {
-      ElMessage.error(result.message || '删除失败');
+      ElMessage.error(result.message || '删除失败')
     }
   } catch {
     // 用户取消
@@ -222,42 +267,90 @@ async function deleteTask(task: Task) {
 
 <style scoped>
 .tasks-page {
-  padding: 20px;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  min-height: calc(100vh - 96px);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-light);
 }
 
-.page-header h1 {
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.header-left h1 {
   margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .filter-bar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.tasks-card-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-md);
+  min-height: 200px;
+}
+
+.tasks-table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.task-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.task-desc-preview {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
 }
 
 .completed-task {
   text-decoration: line-through;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .overdue {
-  color: #f56c6c;
-  font-weight: bold;
+  color: var(--danger-color);
+  font-weight: 600;
 }
 
 .upcoming {
-  color: #e6a23c;
+  color: var(--warning-color);
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: var(--spacing-lg);
   display: flex;
   justify-content: center;
 }
