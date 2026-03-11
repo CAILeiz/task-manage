@@ -1,239 +1,153 @@
-# 任务管理应用
+# 任务管理应用 (重构版)
 
-一个轻量级、高性能的任务管理 Web 应用，使用原生 JavaScript 和 IndexedDB 构建。
+前后端分离架构，数据存储在 MySQL 数据库中，支持用户注册登录，数据按用户隔离。
 
-## 🌐 在线预览
+## 🏗️ 项目结构
 
-### 方式一：GitHub Pages（推荐）
-
-```bash
-# 安装部署工具
-npm install -D gh-pages
-
-# 构建并部署到 GitHub Pages
-npm run deploy:gh-pages
+```
+task-manage/
+├── backend/          # Node.js 后端
+│   ├── src/
+│   │   ├── controllers/   # 控制器
+│   │   ├── services/      # 业务逻辑
+│   │   ├── models/        # 数据模型
+│   │   ├── routes/        # 路由
+│   │   ├── middleware/    # 中间件
+│   │   ├── config/        # 配置
+│   │   └── utils/         # 工具函数
+│   └── tests/            # 测试
+├── frontend/         # Vue 3 前端
+│   ├── src/
+│   │   ├── components/    # 组件
+│   │   ├── views/         # 页面
+│   │   ├── stores/        # Pinia 状态管理
+│   │   ├── router/        # Vue Router
+│   │   ├── api/           # API 请求
+│   │   └── types/         # TypeScript 类型
+│   └── tests/            # 测试
+└── docker-compose.yml    # Docker 编排
 ```
 
-部署完成后，访问 `https://CAILeiz.github.io/task-manage/` 即可在线体验。
+## 🚀 快速开始
 
-### 方式二：Vercel 一键部署
-
-1. 访问 [Vercel](https://vercel.com)
-2. 导入此 GitHub 仓库
-3. 自动构建并生成预览链接
-
-### 方式三：Netlify 一键部署
-
-1. 访问 [Netlify](https://netlify.com)
-2. 连接 GitHub 仓库
-3. 设置构建命令：`npm run build`
-4. 设置发布目录：`dist`
-
-### 方式四：本地预览
+### 方式一：Docker Compose（推荐）
 
 ```bash
-# 构建生产版本
-npm run build
+# 启动所有服务（MySQL + Redis + 后端）
+docker-compose up -d
 
-# 本地预览构建结果
-npm run preview
+# 后端运行在 http://localhost:3000
 ```
 
-## 🎯 特性
-
-- ✅ **任务创建和管理** - 快速创建任务，设置优先级和截止日期
-- 🎨 **优先级管理** - 高/中/低三级优先级，颜色编码
-- 📅 **截止日期跟踪** - 今天到期、即将到期、已过期过滤
-- 🔍 **智能过滤** - 按优先级和截止日期组合过滤
-- 💾 **本地存储** - IndexedDB 持久化，数据不丢失
-- 🚀 **高性能** - UI 响应 <100ms，支持 1000+ 任务
-- 📱 **响应式设计** - 适配桌面和移动设备
-
-## 🛠️ 技术栈
-
-- **原生 JavaScript (ES2020+)** - 无框架依赖
-- **Web Components** - 可复用的自定义组件
-- **IndexedDB** - 浏览器内置数据库
-- **Vite** - 现代开发构建工具
-
-## 📦 快速开始
-
-### 前置要求
-
-- 现代浏览器（Chrome 90+、Firefox 88+、Safari 14+、Edge 90+）
-- Node.js 18+（可选，仅用于开发工具）
-
-### 安装
+### 方式二：手动启动
 
 ```bash
-# 克隆项目
-git clone <repository-url>
-cd my-task-app
+# 1. 启动 MySQL 和 Redis
+# 确保 MySQL 运行在 localhost:3306，Redis 运行在 localhost:6379
 
-# 安装依赖
+# 2. 启动后端
+cd backend
+cp .env.example .env
 npm install
-```
+npm run dev
 
-### 开发
-
-```bash
-# 启动开发服务器
+# 3. 启动前端（新终端）
+cd frontend
+npm install
 npm run dev
 
 # 访问 http://localhost:5173
 ```
 
-### 构建
+## 🛠️ 技术栈
+
+**后端**:
+- Node.js 18 + Express
+- TypeScript
+- MySQL 8.0 + mysql2
+- Redis 7
+- JWT (jsonwebtoken)
+- bcryptjs (密码加密)
+
+**前端**:
+- Vue 3.4 + TypeScript
+- Vite 5
+- Element Plus (UI 组件)
+- Pinia (状态管理)
+- Vue Router 4
+- Axios
+
+## 📚 API 文档
+
+### 认证
+- `POST /api/auth/register` - 用户注册
+- `POST /api/auth/login` - 用户登录
+- `GET /api/auth/me` - 获取当前用户信息
+
+### 任务
+- `GET /api/tasks` - 获取任务列表（支持过滤、分页）
+- `POST /api/tasks` - 创建任务
+- `GET /api/tasks/:id` - 获取单个任务
+- `PUT /api/tasks/:id` - 更新任务
+- `DELETE /api/tasks/:id` - 删除任务
+
+## 🧪 测试
 
 ```bash
-# 生产构建
+# 后端测试
+cd backend && npm test
+
+# 前端测试
+cd frontend && npm test
+```
+
+## 📦 部署
+
+### 生产环境部署
+
+```bash
+# 1. 构建后端
+cd backend
+npm ci --only=production
 npm run build
 
-# 预览构建结果
-npm run preview
+# 2. 构建前端
+cd frontend
+npm ci
+npm run build
+
+# 3. 使用 Docker Compose 部署
+docker-compose -f docker-compose.yml up -d
 ```
 
-### 测试
+## 📝 数据库 Schema
 
-```bash
-# 运行所有测试
-npm test
+**users 表**:
+- id (VARCHAR(36), PK)
+- username (VARCHAR(50), UNIQUE)
+- email (VARCHAR(100), UNIQUE)
+- password_hash (VARCHAR(255))
+- created_at, updated_at (TIMESTAMP)
 
-# 运行特定测试文件
-npx web-test-runner "tests/unit/storage/task-repository.test.js" --node-resolve
-```
+**tasks 表**:
+- id (VARCHAR(36), PK)
+- user_id (VARCHAR(36), FK -> users.id)
+- name (VARCHAR(200))
+- description (VARCHAR(100))
+- priority (ENUM: HIGH, MEDIUM, LOW)
+- due_date (DATE)
+- completed (BOOLEAN)
+- created_at, updated_at (TIMESTAMP)
 
-## 📁 项目结构
+## 🔒 安全特性
 
-```
-my-task-app/
-├── src/
-│   ├── components/
-│   │   ├── task-form.js      # 任务创建表单
-│   │   ├── task-item.js      # 单个任务展示
-│   │   ├── task-list.js      # 任务列表容器
-│   │   └── filter-bar.js     # 过滤器工具栏
-│   ├── storage/
-│   │   ├── indexeddb.js      # IndexedDB 初始化
-│   │   └── task-repository.js # 任务 CRUD 操作
-│   ├── models/
-│   │   └── task.js           # Task 模型和验证
-│   ├── utils/
-│   │   ├── date-utils.js     # 日期工具函数
-│   │   └── uuid.js           # UUID 生成
-│   └── main.js               # 应用入口
-├── tests/
-│   ├── contract/             # 合同测试
-│   ├── integration/          # 集成测试
-│   └── unit/                 # 单元测试
-├── index.html
-├── package.json
-└── vite.config.js
-```
+- JWT Token 认证 (Access Token 2小时，Refresh Token 7天)
+- 密码 bcrypt 加密
+- SQL 注入防护 (参数化查询)
+- CORS 配置
+- Helmet 安全中间件
+- 数据隔离 (用户只能访问自己的数据)
 
-## 🎯 使用指南
+## 📄 License
 
-### 创建任务
-
-1. 在表单中输入任务名称
-2. 选择优先级（高/中/低）
-3. （可选）设置截止日期
-4. 点击"创建任务"按钮
-
-### 管理任务
-
-- **标记完成** - 点击任务右侧的 ✅ 按钮
-- **取消完成** - 点击已完成任务的 ↩️ 按钮
-- **查看优先级** - 彩色圆点表示优先级（红=高，橙=中，绿=低）
-
-### 过滤任务
-
-**按优先级过滤：**
-- 选择"高优先级"查看紧急任务
-- 选择"中优先级"查看计划任务
-- 选择"低优先级"查看可延后任务
-
-**按截止日期过滤：**
-- "今天到期" - 查看今日任务
-- "即将到期" - 查看未来 7 天任务
-- "已过期" - 查看逾期未完成任务
-- "无截止日期" - 查看未设置日期的任务
-
-## 🧪 测试覆盖率
-
-项目遵循 TDD 开发流程，测试覆盖率目标 ≥90%。
-
-```bash
-# 运行测试并生成覆盖率报告
-npx web-test-runner "tests/**/*.test.js" --node-resolve --coverage
-```
-
-### 测试分类
-
-- **合同测试** - 验证数据结构和 API 接口
-- **单元测试** - 测试模型、工具函数、组件逻辑
-- **集成测试** - 测试完整流程和端到端场景
-
-## 🔒 数据隐私
-
-- 所有数据存储在本地浏览器 IndexedDB 中
-- 不上传任何数据到服务器
-- 清除浏览器数据会删除所有任务
-
-## 🎨 自定义
-
-### 修改主题颜色
-
-编辑 `index.html` 中的 CSS 变量：
-
-```css
-:root {
-  --priority-high: #ef4444;    /* 高优先级颜色 */
-  --priority-medium: #f59e0b;  /* 中优先级颜色 */
-  --priority-low: #10b981;     /* 低优先级颜色 */
-}
-```
-
-### 添加新功能
-
-1. 在 `src/components/` 创建新的 Web Component
-2. 在 `src/models/` 添加数据模型
-3. 在 `tests/` 添加对应测试
-
-## 📊 性能指标
-
-| 指标 | 目标 | 实测 |
-|------|------|------|
-| UI 响应时间 | <100ms | ✅ |
-| 列表渲染 (100 任务) | <1s | ✅ |
-| 内存占用 | <50MB | ✅ |
-| 打包大小 | <100KB (gzip) | ✅ |
-
-## 🤝 贡献
-
-欢迎贡献代码！请遵循以下步骤：
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📝 开发原则
-
-本项目遵循以下开发原则：
-
-- **原生 Web API 优先** - 使用浏览器原生 API，零第三方依赖
-- **测试优先** - TDD 开发，覆盖率 ≥90%
-- **性能优先** - UI 响应 <100ms
-- **增量交付** - MVP 先行，逐步迭代
-
-## 📄 许可证
-
-MIT License
-
-## 🙏 致谢
-
-- [Web Components MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components)
-- [IndexedDB MDN](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-- [Vite](https://vitejs.dev/)
+MIT
