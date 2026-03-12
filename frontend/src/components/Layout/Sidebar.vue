@@ -21,39 +21,42 @@
         <el-menu-item index="all">
           <el-icon><List /></el-icon>
           <template #title>
-            <span>全部任务</span>
-            <el-badge 
-              v-if="counts.all > 0" 
-              :value="counts.all" 
-              type="primary"
-              class="menu-badge"
-            />
+            <div class="menu-item-content">
+              <span>全部任务</span>
+              <el-badge 
+                v-if="counts.all > 0" 
+                :value="counts.all" 
+                type="primary"
+              />
+            </div>
           </template>
         </el-menu-item>
 
         <el-menu-item index="today">
           <el-icon><Calendar /></el-icon>
           <template #title>
-            <span>今日</span>
-            <el-badge 
-              v-if="counts.today > 0" 
-              :value="counts.today" 
-              type="warning"
-              class="menu-badge"
-            />
+            <div class="menu-item-content">
+              <span>今日</span>
+              <el-badge 
+                v-if="counts.today > 0" 
+                :value="counts.today" 
+                type="warning"
+              />
+            </div>
           </template>
         </el-menu-item>
 
         <el-menu-item index="overdue">
           <el-icon><Clock /></el-icon>
           <template #title>
-            <span>过期</span>
-            <el-badge 
-              v-if="counts.overdue > 0" 
-              :value="counts.overdue" 
-              type="danger"
-              class="menu-badge"
-            />
+            <div class="menu-item-content">
+              <span>过期</span>
+              <el-badge 
+                v-if="counts.overdue > 0" 
+                :value="counts.overdue" 
+                type="danger"
+              />
+            </div>
           </template>
         </el-menu-item>
 
@@ -203,9 +206,12 @@ onMounted(() => {
   color: white;
 }
 
-.menu-badge {
-  margin-left: auto;
-  margin-right: var(--spacing-sm);
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-left: var(--spacing-sm);
 }
 
 .sidebar-footer {

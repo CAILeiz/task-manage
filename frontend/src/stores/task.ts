@@ -55,6 +55,7 @@ export const useTaskStore = defineStore('task', () => {
       if (response.code === 0) {
         tasks.value.unshift(response.data);
         total.value++;
+        fetchTaskCounts();
         return { success: true, task: response.data };
       }
       return { success: false, message: response.message };
@@ -85,6 +86,7 @@ export const useTaskStore = defineStore('task', () => {
       if (response.code === 0) {
         tasks.value = tasks.value.filter(t => t.id !== id);
         total.value--;
+        fetchTaskCounts();
         return { success: true };
       }
       return { success: false, message: response.message };

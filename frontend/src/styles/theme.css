@@ -117,3 +117,107 @@ a:hover {
   background-color: var(--primary-light);
   color: var(--text-inverse);
 }
+
+/* Dark Mode Enhancements */
+html.dark body {
+  background-color: #0a0a0a;
+}
+
+html.dark .el-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-light);
+}
+
+html.dark .el-menu {
+  background-color: transparent;
+}
+
+html.dark .el-menu-item {
+  color: var(--text-secondary);
+}
+
+html.dark .el-menu-item:hover,
+html.dark .el-menu-item.is-active {
+  background-color: var(--bg-tertiary);
+  color: var(--primary-light);
+}
+
+html.dark .el-table {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark .el-table th.el-table__cell {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+html.dark .el-table tr {
+  background-color: var(--bg-primary);
+}
+
+html.dark .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: var(--bg-secondary);
+}
+
+html.dark .el-table td.el-table__cell,
+html.dark .el-table th.el-table__cell.is-leaf {
+  border-color: var(--border-light);
+}
+
+html.dark .el-input__wrapper {
+  background-color: var(--bg-tertiary);
+  box-shadow: none;
+}
+
+html.dark .el-input__inner {
+  color: var(--text-primary);
+}
+
+/* Card Hover Effects */
+.task-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+html.dark .task-card {
+  border-color: var(--border-light);
+}
+
+html.dark .task-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Button Enhancements */
+.el-button--primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.el-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+/* Sidebar Enhancements */
+.sidebar {
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  border-right: 1px solid var(--border-light);
+}
+
+html.dark .sidebar {
+  background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
+}
+
+/* Header Gradient */
+.layout-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
