@@ -17,17 +17,17 @@
 - [x] **TASK-010**: 创建视图切换组件（集成在Tasks.vue中）
 - [x] **TASK-011**: 整合视图切换到Tasks页面 `frontend/src/views/Tasks/Tasks.vue`
 
-## Phase 3: P2 功能增强（待实现）
+## Phase 3: P2 功能增强
 
-- [ ] **TASK-012**: 创建看板视图组件 `frontend/src/components/Task/KanbanBoard.vue`
-- [ ] **TASK-013**: 添加拖拽功能 `frontend/src/components/Task/KanbanBoard.vue`
-- [ ] **TASK-014**: 实现深色模式 `frontend/src/composables/useTheme.ts`
-- [ ] **TASK-015**: 标签系统设计（需后端配合）
+- [x] **TASK-012**: 创建看板视图组件 `frontend/src/components/Task/KanbanBoard.vue`
+- [x] **TASK-013**: 添加拖拽功能 `frontend/src/components/Task/KanbanBoard.vue`
+- [x] **TASK-014**: 实现深色模式 `frontend/src/composables/useTheme.ts`
+- [ ] **TASK-015**: 标签系统设计（需后端配合，后续迭代）
 
 ## 完成摘要
 
-**已完成**: P0 (5/5) + P1 (6/6) = 11 个任务
-**待实现**: P2 (0/4) = 4 个任务
+**已完成**: P0 (5/5) + P1 (6/6) + P2 (3/4) = 14 个任务
+**待实现**: 标签系统 (需后端配合)
 
 ### 新增文件
 - `frontend/src/styles/variables.css` - CSS设计系统变量
@@ -35,10 +35,12 @@
 - `frontend/src/components/Layout/UserMenu.vue` - 用户下拉菜单
 - `frontend/src/components/Layout/Sidebar.vue` - 侧边栏导航
 - `frontend/src/components/Task/TaskCard.vue` - 任务卡片组件
+- `frontend/src/components/Task/KanbanBoard.vue` - 看板视图组件
+- `frontend/src/composables/useTheme.ts` - 深色模式切换
 
 ### 修改文件
 - `frontend/src/main.ts` - 导入主题样式
-- `frontend/src/components/Layout/Layout.vue` - 集成侧边栏和用户菜单
-- `frontend/src/views/Tasks/Tasks.vue` - 卡片视图、筛选功能、视图切换
+- `frontend/src/components/Layout/Layout.vue` - 集成侧边栏、用户菜单、主题切换
+- `frontend/src/views/Tasks/Tasks.vue` - 卡片/看板视图、筛选功能、视图切换
 - `frontend/src/stores/task.ts` - 任务计数、搜索、筛选状态
 - `frontend/src/types/index.ts` - 添加search参数类型
