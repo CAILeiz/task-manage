@@ -13,6 +13,10 @@
             <el-icon><Grid /></el-icon>
             卡片
           </el-radio-button>
+          <el-radio-button value="kanban">
+            <el-icon><DataBoard /></el-icon>
+            看板
+          </el-radio-button>
           <el-radio-button value="table">
             <el-icon><List /></el-icon>
             列表
@@ -53,6 +57,15 @@
       />
       <el-empty v-if="!taskStore.loading && taskStore.tasks.length === 0" description="暂无任务" />
     </div>
+
+    <KanbanBoard
+      v-else-if="viewMode === 'kanban'"
+      :tasks="taskStore.tasks"
+      v-loading="taskStore.loading"
+      @edit="editTask"
+      @delete="deleteTask"
+      @status-change="handleStatusChange"
+    />
 
     <el-table 
       v-else
@@ -133,17 +146,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Grid, List } from '@element-plus/icons-vue'
+import { Plus, Grid, List, DataBoard } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
 import type { Task, Priority, CreateTaskRequest, UpdateTaskRequest } from '@/types'
 import TaskDialog from '@/components/Task/TaskDialog.vue'
 import TaskCard from '@/components/Task/TaskCard.vue'
+import KanbanBoard from '@/components/Task/KanbanBoard.vue'
 
 const taskStore = useTaskStore()
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const editingTask = ref<Task | undefined>(undefined)
-const viewMode = ref<'card' | 'table'>('card')
+const viewMode = ref<'card' | 'kanban' | 'table'>('card')
 
 const filter = reactive({
   priority: undefined as Priority | undefined,
@@ -216,6 +230,13 @@ async function toggleComplete(task: Task) {
     ElMessage.success(task.completed ? '已标记为未完成' : '已标记为完成')
   } else {
     ElMessage.error(result.message || '操作失败')
+  }
+}
+
+async function handleStatusChange(task: Task, completed: boolean) {
+  if (task.completed !== completed) {
+    await taskStore.toggleComplete(task)
+    ElMessage.success(completed ? '已标记为完成' : '已标记为未完成')
   }
 }
 

@@ -7,9 +7,12 @@
           <h1>TaskFlow</h1>
         </div>
         <div class="header-right">
-          <el-badge :value="notificationCount" :hidden="notificationCount === 0" class="notification-badge">
-            <el-button :icon="Bell" circle />
-          </el-badge>
+          <el-button 
+            :icon="theme === 'dark' ? Sunny : Moon" 
+            circle 
+            @click="toggleTheme"
+            class="theme-toggle"
+          />
           <UserMenu v-if="authStore.isLoggedIn" />
         </div>
       </div>
@@ -24,14 +27,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { List, Bell } from '@element-plus/icons-vue'
+import { onMounted } from 'vue'
+import { List, Bell, Sunny, Moon } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/composables/useTheme'
 import UserMenu from './UserMenu.vue'
 import Sidebar from './Sidebar.vue'
 
 const authStore = useAuthStore()
-const notificationCount = ref(0)
+const { theme, toggleTheme, initTheme } = useTheme()
+
+onMounted(() => {
+  initTheme()
+})
 </script>
 
 <style scoped>
@@ -84,13 +92,13 @@ const notificationCount = ref(0)
   gap: var(--spacing-md);
 }
 
-.notification-badge :deep(.el-button) {
+.theme-toggle {
   background: rgba(255, 255, 255, 0.15);
   border: none;
   color: white;
 }
 
-.notification-badge :deep(.el-button:hover) {
+.theme-toggle:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
