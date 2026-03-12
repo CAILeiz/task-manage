@@ -1,5 +1,8 @@
 import app from './app';
+import { createServer } from 'http';
 import { initDatabase, closePool } from './config/database';
+import { initSocketIO } from './socket/index';
+import { startTaskReminderScheduler } from './schedulers/index';
 
 const PORT = process.env.PORT || 3000;
 
@@ -8,7 +11,15 @@ async function startServer(): Promise<void> {
     await initDatabase();
     console.log('Database initialized');
 
-    app.listen(PORT, () => {
+    const httpServer = createServer(app);
+
+    initSocketIO(httpServer);
+    console.log('WebSocket server initialized');
+
+    startTaskReminderScheduler();
+    console.log('Task reminder scheduler started');
+
+    httpServer.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
@@ -17,7 +28,6 @@ async function startServer(): Promise<void> {
   }
 }
 
-// 优雅关闭
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
   await closePool();

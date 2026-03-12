@@ -69,9 +69,6 @@ export class Task implements ITask {
     return dueDate.getTime() === today.getTime();
   }
 
-  /**
-   * 检查任务是否即将到期（7天内）
-   */
   isUpcoming(): boolean {
     if (!this.dueDate || this.completed) {
       return false;
@@ -81,7 +78,7 @@ export class Task implements ITask {
     const dueDate = new Date(this.dueDate);
     dueDate.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays > 0 && diffDays <= 7;
+    return diffDays > 0 && diffDays <= 1;
   }
 
   /**

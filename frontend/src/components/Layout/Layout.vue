@@ -28,9 +28,7 @@
         </div>
         
         <div class="header-right">
-          <el-tooltip v-if="!isMobile" content="通知" placement="bottom">
-            <el-button :icon="Bell" circle class="header-btn" />
-          </el-tooltip>
+          <NotificationCenter v-if="!isMobile" />
           <el-tooltip :content="theme === 'dark' ? '切换亮色模式' : '切换暗色模式'" placement="bottom">
             <el-button 
               :icon="theme === 'dark' ? Sunny : Moon" 
@@ -61,21 +59,26 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Search, Bell, Sunny, Moon } from '@element-plus/icons-vue'
+import { Search, Sunny, Moon } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useWebSocketConnection } from '@/composables/useWebSocket'
+import { useNotificationStore } from '@/stores/notification'
 import UserMenu from './UserMenu.vue'
 import Sidebar from './Sidebar.vue'
 import CommandPalette from '../Command/CommandPalette.vue'
 import HamburgerMenu from './HamburgerMenu.vue'
 import FloatingActionButton from './FloatingActionButton.vue'
+import NotificationCenter from '../Notification/NotificationCenter.vue'
 
 const authStore = useAuthStore()
 const { theme, toggleTheme, initTheme } = useTheme()
 const { isMobile } = useBreakpoint()
 const commandPaletteRef = ref()
 const drawerVisible = ref(false)
+const { status: wsStatus } = useWebSocketConnection()
+const notificationStore = useNotificationStore()
 
 const openCommandPalette = () => {
   commandPaletteRef.value?.open()
@@ -96,6 +99,7 @@ onMounted(() => {
   initTheme()
   document.addEventListener('keydown', handleKeydown)
   window.addEventListener('new-task', handleNewTask)
+  notificationStore.setupWebSocketListeners()
 })
 
 onUnmounted(() => {

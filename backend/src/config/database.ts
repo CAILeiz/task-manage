@@ -32,28 +32,19 @@ export async function getDb(): Promise<mysql.PoolConnection> {
   return getPool().getConnection();
 }
 
-/**
- * 执行查询（SELECT）
- */
 export async function query<T = any>(sql: string, params?: any[]): Promise<T[]> {
-  const [rows] = await getPool().execute(sql, params);
+  const [rows] = await getPool().query(sql, params || []);
   return rows as T[];
 }
 
-/**
- * 执行单行查询
- */
 export async function get<T = any>(sql: string, params?: any[]): Promise<T | undefined> {
-  const [rows] = await getPool().execute(sql, params);
+  const [rows] = await getPool().query(sql, params || []);
   const results = rows as T[];
   return results.length > 0 ? results[0] : undefined;
 }
 
-/**
- * 执行更新操作（INSERT, UPDATE, DELETE）
- */
 export async function run(sql: string, params?: any[]): Promise<{ lastID: number; changes: number }> {
-  const [result] = await getPool().execute(sql, params);
+  const [result] = await getPool().query(sql, params || []);
   const insertResult = result as mysql.ResultSetHeader;
   return {
     lastID: insertResult.insertId,
@@ -61,9 +52,6 @@ export async function run(sql: string, params?: any[]): Promise<{ lastID: number
   };
 }
 
-/**
- * 初始化数据库 - 创建表
- */
 export async function initDatabase(): Promise<void> {
   const pool = getPool();
 
@@ -127,6 +115,23 @@ export async function initDatabase(): Promise<void> {
       INDEX idx_completed (completed),
       INDEX idx_due_date (due_date),
       INDEX idx_created_at (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  // 创建 notifications 表
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id VARCHAR(36) PRIMARY KEY,
+      user_id VARCHAR(36) NOT NULL,
+      type ENUM('task_reminder', 'task_completed', 'task_uncompleted', 'task_created') NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      content TEXT,
+      task_id VARCHAR(36),
+      read_at DATETIME NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user_read (user_id, read_at),
+      INDEX idx_user_created (user_id, created_at),
+      INDEX idx_task (task_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 

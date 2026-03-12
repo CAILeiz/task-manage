@@ -314,9 +314,9 @@ function getDueDateClass(task: Task) {
   today.setHours(0, 0, 0, 0)
   const dueDate = new Date(task.dueDate)
   if (dueDate < today) return 'overdue'
-  const nextWeek = new Date(today)
-  nextWeek.setDate(today.getDate() + 7)
-  if (dueDate <= nextWeek) return 'upcoming'
+  const nextDay = new Date(today)
+  nextDay.setDate(today.getDate() + 1)
+  if (dueDate <= nextDay) return 'upcoming'
   return ''
 }
 
@@ -350,9 +350,25 @@ function editTask(task: Task) {
   showEditDialog.value = true
 }
 
-async function updateTask(task: Partial<Task>) {
-  if (!editingTask.value) return
-  await taskStore.updateTask(editingTask.value.id, task)
+async function updateTask(data: Partial<Task> & { id?: string }) {
+  const taskId = data.id || editingTask.value?.id
+  if (!taskId) return
+
+  const originalTask = taskStore.tasks.find(t => t.id === taskId)
+  if (!originalTask) return
+
+  if (data.completed !== undefined && originalTask.completed !== data.completed) {
+    originalTask.completed = data.completed
+  }
+
+  const result = await taskStore.updateTask(taskId, data)
+
+  if (!result.success && data.completed !== undefined) {
+    originalTask.completed = !data.completed
+    ElMessage.error(result.message || '操作失败')
+  } else if (data.completed !== undefined) {
+    ElMessage.success(data.completed ? '已标记为完成' : '已标记为未完成')
+  }
 }
 
 async function handleCreate(data: CreateTaskRequest) {

@@ -3,6 +3,7 @@ import { createTask, findTasksByUserId, findTaskById, updateTask, deleteTask } f
 import { successResponse, errorResponse, paginationResponse } from '../utils/response';
 import Task from '../models/Task';
 import { Priority } from '../models/types';
+import { NotificationService } from '../services/notificationService';
 
 export async function getTasks(req: Request, res: Response): Promise<void> {
   try {
@@ -74,6 +75,11 @@ export async function createTaskHandler(req: Request, res: Response): Promise<vo
     }
 
     const task = await createTask(userId, { name, description, priority, dueDate });
+
+    NotificationService.notifyTaskCreated(userId, { id: task.id, name: task.name }).catch(err => {
+      console.error('Failed to send task created notification:', err);
+    });
+
     res.status(201).json(successResponse(task, '任务创建成功'));
   } catch (error: any) {
     res.status(500).json(errorResponse(error.message || '创建任务失败', 500));
@@ -97,10 +103,22 @@ export async function updateTaskHandler(req: Request, res: Response): Promise<vo
       return;
     }
 
+    const existingTask = await findTaskById(id, userId);
+    if (!existingTask) {
+      res.status(404).json(errorResponse('任务不存在', 404));
+      return;
+    }
+
     const task = await updateTask(id, userId, { name, description, priority, dueDate, completed });
     if (!task) {
       res.status(404).json(errorResponse('任务不存在', 404));
       return;
+    }
+
+    if (completed !== undefined && existingTask.completed !== completed) {
+      NotificationService.handleTaskStatusChange(userId, { id: task.id, name: task.name }, completed).catch(err => {
+        console.error('Failed to send task status notification:', err);
+      });
     }
 
     res.json(successResponse(task, '任务更新成功'));

@@ -5,9 +5,7 @@ import { generateAccessToken, generateRefreshToken, TokenPayload } from '../util
 import { query, get, run } from '../config/database';
 import { setValue, getValue, deleteKey } from '../config/redis';
 
-// Token 过期时间（秒）
-const ACCESS_TOKEN_TTL = 2 * 60 * 60; // 2小时
-const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7天
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60;
 
 // 用户服务
 
@@ -356,7 +354,7 @@ export async function findTasksByUserId(
         whereClause += ' AND t.due_date = CURDATE()';
         break;
       case 'upcoming':
-        whereClause += ' AND t.due_date > CURDATE() AND t.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND t.completed = 0';
+        whereClause += ' AND t.due_date > CURDATE() AND t.due_date <= DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND t.completed = 0';
         break;
       case 'overdue':
         whereClause += ' AND t.due_date < CURDATE() AND t.completed = 0';
@@ -450,6 +448,157 @@ export async function updateTask(id: string, userId: string, data: IUpdateTaskRe
 export async function deleteTask(id: string, userId: string): Promise<boolean> {
   const result = await run('DELETE FROM tasks WHERE id = ? AND user_id = ?', [id, userId]);
   return result.changes > 0;
+}
+
+export async function findUpcomingTasks(from: Date, to: Date): Promise<any[]> {
+  const rows = await query<any>(
+    `SELECT id, user_id, name, description, priority, due_date, completed, created_at, updated_at
+     FROM tasks 
+     WHERE completed = 0 
+     AND due_date IS NOT NULL 
+     AND due_date BETWEEN ? AND ?
+     ORDER BY due_date ASC`,
+    [from, to]
+  );
+  return rows.map(row => ({
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    description: row.description,
+    priority: row.priority,
+    due_date: row.due_date ? new Date(row.due_date) : null,
+    completed: row.completed === 1 || row.completed === true,
+    created_at: new Date(row.created_at),
+    updated_at: new Date(row.updated_at),
+  }));
+}
+
+export interface TaskCounts {
+  all: number;
+  today: number;
+  overdue: number;
+  upcoming: number;
+  none: number;
+  completed: number;
+}
+
+export async function getTaskCounts(userId: string): Promise<TaskCounts> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [all, todayCount, overdue, upcoming, none, completed] = await Promise.all([
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?', [userId]),
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND due_date = CURDATE()', [userId]),
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND due_date < CURDATE() AND completed = 0', [userId]),
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND due_date > CURDATE() AND due_date <= DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND completed = 0', [userId]),
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND due_date IS NULL', [userId]),
+    get<any>('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND completed = 1', [userId]),
+  ]);
+
+  return {
+    all: all?.count || 0,
+    today: todayCount?.count || 0,
+    overdue: overdue?.count || 0,
+    upcoming: upcoming?.count || 0,
+    none: none?.count || 0,
+    completed: completed?.count || 0,
+  };
+}
+
+export type NotificationType = 'task_reminder' | 'task_completed' | 'task_uncompleted' | 'task_created';
+
+export interface INotification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  content: string | null;
+  task_id: string | null;
+  read_at: Date | null;
+  created_at: Date;
+}
+
+export async function createNotification(data: {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  content?: string;
+  taskId?: string;
+}): Promise<INotification> {
+  const id = uuidv4();
+  const now = new Date();
+
+  await run(
+    'INSERT INTO notifications (id, user_id, type, title, content, task_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [id, data.userId, data.type, data.title, data.content || null, data.taskId || null, now]
+  );
+
+  return {
+    id,
+    user_id: data.userId,
+    type: data.type,
+    title: data.title,
+    content: data.content || null,
+    task_id: data.taskId || null,
+    read_at: null,
+    created_at: now,
+  };
+}
+
+export async function findNotificationsByUserId(
+  userId: string,
+  page: number = 1,
+  limit: number = 20
+): Promise<{ list: INotification[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  const rows = await query<any>(
+    'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+    [userId, limit, offset]
+  );
+
+  const countResult = await get<any>(
+    'SELECT COUNT(*) as total FROM notifications WHERE user_id = ?',
+    [userId]
+  );
+
+  return {
+    list: rows.map(row => ({
+      id: row.id,
+      user_id: row.user_id,
+      type: row.type,
+      title: row.title,
+      content: row.content,
+      task_id: row.task_id,
+      read_at: row.read_at ? new Date(row.read_at) : null,
+      created_at: new Date(row.created_at),
+    })),
+    total: countResult?.total || 0,
+  };
+}
+
+export async function getNotificationUnreadCount(userId: string): Promise<number> {
+  const result = await get<any>(
+    'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read_at IS NULL',
+    [userId]
+  );
+  return result?.count || 0;
+}
+
+export async function markNotificationAsRead(id: string, userId: string): Promise<boolean> {
+  const result = await run(
+    'UPDATE notifications SET read_at = NOW() WHERE id = ? AND user_id = ? AND read_at IS NULL',
+    [id, userId]
+  );
+  return result.changes > 0;
+}
+
+export async function markAllNotificationsAsRead(userId: string): Promise<number> {
+  const result = await run(
+    'UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL',
+    [userId]
+  );
+  return result.changes;
 }
 
 // 数据库初始化和清理函数
