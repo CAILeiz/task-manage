@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import Layout from '../components/Layout/Layout.vue';
 
 const routes = [
   {
@@ -20,9 +21,26 @@ const routes = [
   },
   {
     path: '/tasks',
-    name: 'Tasks',
-    component: () => import('../views/Tasks/Tasks.vue'),
+    component: Layout,
     meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Tasks',
+        component: () => import('../views/Tasks/Tasks.vue'),
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('../views/Settings/Settings.vue'),
+      },
+    ],
+  },
+  {
+    path: '/auth/github/callback',
+    name: 'GitHubCallback',
+    component: () => import('../views/Auth/GitHubCallback.vue'),
+    meta: { public: true },
   },
 ];
 
@@ -31,14 +49,11 @@ const router = createRouter({
   routes,
 });
 
-// 路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
-  // 如果页面需要登录
   if (to.meta.requiresAuth) {
     if (!authStore.isLoggedIn) {
-      // 尝试获取用户信息
       await authStore.fetchUser();
       if (!authStore.isLoggedIn) {
         return next('/login');
@@ -46,7 +61,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // 如果已登录用户访问登录/注册页，重定向到任务列表
   if (to.meta.public && authStore.isLoggedIn) {
     return next('/tasks');
   }

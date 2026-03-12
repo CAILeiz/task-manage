@@ -120,12 +120,34 @@ a:hover {
 
 /* Dark Mode Enhancements */
 html.dark body {
-  background-color: #0a0a0a;
+  background-color: #0d0d0d;
 }
 
 html.dark .el-card {
   background-color: var(--bg-secondary);
   border-color: var(--border-light);
+}
+
+html.dark .el-dialog {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-light);
+}
+
+html.dark .el-dialog__header {
+  border-bottom: 1px solid var(--border-light);
+}
+
+html.dark .el-dialog__title {
+  color: var(--text-primary);
+}
+
+html.dark .el-drawer {
+  background-color: var(--bg-primary);
+}
+
+html.dark .el-drawer__header {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
 }
 
 html.dark .el-menu {
@@ -145,6 +167,10 @@ html.dark .el-menu-item.is-active {
 html.dark .el-table {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  --el-table-border-color: var(--border-light);
+  --el-table-tr-bg-color: var(--bg-primary);
+  --el-table-header-bg-color: var(--bg-secondary);
+  --el-table-row-hover-bg-color: var(--bg-tertiary);
 }
 
 html.dark .el-table th.el-table__cell {
@@ -168,10 +194,92 @@ html.dark .el-table th.el-table__cell.is-leaf {
 html.dark .el-input__wrapper {
   background-color: var(--bg-tertiary);
   box-shadow: none;
+  border: 1px solid var(--border-light);
+}
+
+html.dark .el-input__wrapper:hover {
+  border-color: var(--border-base);
+}
+
+html.dark .el-input__wrapper.is-focus {
+  border-color: var(--primary-color);
 }
 
 html.dark .el-input__inner {
   color: var(--text-primary);
+}
+
+html.dark .el-textarea__inner {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+html.dark .el-textarea__inner:hover {
+  border-color: var(--border-base);
+}
+
+html.dark .el-textarea__inner:focus {
+  border-color: var(--primary-color);
+}
+
+html.dark .el-select-dropdown {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-light);
+}
+
+html.dark .el-select-dropdown__item {
+  color: var(--text-primary);
+}
+
+html.dark .el-select-dropdown__item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+html.dark .el-select-dropdown__item.selected {
+  color: var(--primary-color);
+}
+
+html.dark .el-date-picker {
+  background-color: var(--bg-secondary);
+}
+
+html.dark .el-button--default {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+html.dark .el-button--default:hover {
+  background-color: var(--border-base);
+  border-color: var(--border-base);
+}
+
+html.dark .el-tag {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+html.dark .el-segmented {
+  background-color: var(--bg-tertiary);
+}
+
+html.dark .el-segmented__item-selected {
+  background-color: var(--primary-color);
+}
+
+html.dark .el-form-item__label {
+  color: var(--text-primary);
+}
+
+html.dark .el-checkbox__label {
+  color: var(--text-primary);
+}
+
+html.dark .el-switch__core {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-light);
 }
 
 /* Card Hover Effects */
@@ -220,4 +328,88 @@ html.dark .sidebar {
 /* Header Gradient */
 .layout-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Animation Utilities */
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.animate-slide-up {
+  animation: slideUp var(--duration-normal) var(--ease-out);
+}
+
+.animate-slide-down {
+  animation: slideDown var(--duration-normal) var(--ease-out);
+}
+
+.animate-slide-left {
+  animation: slideLeft var(--duration-normal) var(--ease-out);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--ease-spring);
+}
+
+.animate-bounce-in {
+  animation: bounceIn var(--duration-slow) var(--ease-spring);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Stagger Animation Delays */
+.animate-delay-1 { animation-delay: 50ms; }
+.animate-delay-2 { animation-delay: 100ms; }
+.animate-delay-3 { animation-delay: 150ms; }
+.animate-delay-4 { animation-delay: 200ms; }
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-slide-left,
+  .animate-scale-in,
+  .animate-bounce-in {
+    animation: none;
+  }
 }

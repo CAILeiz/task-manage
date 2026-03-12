@@ -72,6 +72,9 @@ export const useTaskStore = defineStore('task', () => {
         if (index !== -1) {
           tasks.value[index] = response.data;
         }
+        if ('completed' in data) {
+          fetchTaskCounts();
+        }
         return { success: true, task: response.data };
       }
       return { success: false, message: response.message };

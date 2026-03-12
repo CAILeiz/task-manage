@@ -19,11 +19,13 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
       ? req.query.completed === 'true'
       : undefined;
     const dueDateFilter = req.query.dueDateFilter as 'today' | 'upcoming' | 'overdue' | 'none' | undefined;
+    const search = req.query.search as string | undefined;
 
     const filter = {
       ...(priority && { priority }),
       ...(completed !== undefined && { completed }),
       ...(dueDateFilter && { dueDateFilter }),
+      ...(search && { search }),
     };
 
     const { tasks, total } = await findTasksByUserId(userId, filter, page, limit);

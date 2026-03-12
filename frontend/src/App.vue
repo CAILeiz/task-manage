@@ -1,11 +1,9 @@
 <template>
-  <Layout v-if="authStore.isLoggedIn" />
-  <router-view v-else />
+  <router-view />
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import Layout from './components/Layout/Layout.vue';
 import { useAuthStore } from './stores/auth';
 
 const authStore = useAuthStore();

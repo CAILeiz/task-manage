@@ -13,7 +13,7 @@ const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7天
 
 export async function findUserById(id: string): Promise<IUser | null> {
   const row = await get<any>(
-    'SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = ?',
+    'SELECT id, username, email, password_hash, bio, avatar, github_id, created_at, updated_at FROM users WHERE id = ?',
     [id]
   );
   if (!row) return null;
@@ -23,14 +23,17 @@ export async function findUserById(id: string): Promise<IUser | null> {
     username: row.username,
     email: row.email,
     passwordHash: row.password_hash,
+    bio: row.bio || '',
+    avatar: row.avatar || '',
+    githubId: row.github_id || '',
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-  };
+  } as IUser;
 }
 
 export async function findUserByUsername(username: string): Promise<IUser | null> {
   const row = await get<any>(
-    'SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = ?',
+    'SELECT id, username, email, password_hash, bio, avatar, github_id, created_at, updated_at FROM users WHERE username = ?',
     [username]
   );
   if (!row) return null;
@@ -40,14 +43,17 @@ export async function findUserByUsername(username: string): Promise<IUser | null
     username: row.username,
     email: row.email,
     passwordHash: row.password_hash,
+    bio: row.bio || '',
+    avatar: row.avatar || '',
+    githubId: row.github_id || '',
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-  };
+  } as IUser;
 }
 
 export async function findUserByEmail(email: string): Promise<IUser | null> {
   const row = await get<any>(
-    'SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = ?',
+    'SELECT id, username, email, password_hash, bio, avatar, github_id, created_at, updated_at FROM users WHERE email = ?',
     [email]
   );
   if (!row) return null;
@@ -57,9 +63,12 @@ export async function findUserByEmail(email: string): Promise<IUser | null> {
     username: row.username,
     email: row.email,
     passwordHash: row.password_hash,
+    bio: row.bio || '',
+    avatar: row.avatar || '',
+    githubId: row.github_id || '',
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-  };
+  } as IUser;
 }
 
 export async function createUser(data: ICreateUserRequest): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
@@ -112,7 +121,7 @@ export async function createUser(data: ICreateUserRequest): Promise<{ user: IUse
 
 export async function loginUser(usernameOrEmail: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string } | null> {
   const row = await get<any>(
-    'SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = ? OR email = ?',
+    'SELECT id, username, email, password_hash, bio, avatar, created_at, updated_at FROM users WHERE username = ? OR email = ?',
     [usernameOrEmail, usernameOrEmail]
   );
 
@@ -130,16 +139,123 @@ export async function loginUser(usernameOrEmail: string, password: string): Prom
     username: row.username,
     email: row.email,
     passwordHash: row.password_hash,
+    bio: row.bio || '',
+    avatar: row.avatar || '',
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-  };
+  } as IUser;
 
   const tokenPayload: TokenPayload = { userId: user.id, username: user.username };
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
-  // 存储 Refresh Token 到 Redis
   await setValue(`refresh:${user.id}`, refreshToken, REFRESH_TOKEN_TTL);
+
+  return { user, accessToken, refreshToken };
+}
+
+export async function updateUser(id: string, data: { username?: string; email?: string; bio?: string; avatar?: string }): Promise<IUser | null> {
+  const updates: string[] = [];
+  const params: any[] = [];
+
+  if (data.username !== undefined) {
+    updates.push('username = ?');
+    params.push(data.username);
+  }
+  if (data.email !== undefined) {
+    updates.push('email = ?');
+    params.push(data.email);
+  }
+  if (data.bio !== undefined) {
+    updates.push('bio = ?');
+    params.push(data.bio);
+  }
+  if (data.avatar !== undefined) {
+    updates.push('avatar = ?');
+    params.push(data.avatar);
+  }
+
+  if (updates.length === 0) {
+    return await findUserById(id);
+  }
+
+  params.push(id);
+  await run(`UPDATE users SET ${updates.join(', ')}, updated_at = NOW() WHERE id = ?`, params);
+
+  return await findUserById(id);
+}
+
+export async function changeUserPassword(id: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  const user = await findUserById(id);
+  if (!user) {
+    return { success: false, message: '用户不存在' };
+  }
+
+  const isPasswordValid = await comparePassword(currentPassword, user.passwordHash);
+  if (!isPasswordValid) {
+    return { success: false, message: '当前密码错误' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, message: '新密码长度至少6位' };
+  }
+
+  const newPasswordHash = await hashPassword(newPassword);
+  await run('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?', [newPasswordHash, id]);
+
+  return { success: true, message: '密码修改成功' };
+}
+
+export async function findOrCreateGitHubUser(githubId: string, username: string, email: string, avatar?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+  const existingRow = await get<any>(
+    'SELECT id, username, email, bio, avatar, created_at, updated_at FROM users WHERE github_id = ?',
+    [githubId]
+  );
+
+  if (existingRow) {
+    const user: IUser = {
+      id: existingRow.id,
+      username: existingRow.username,
+      email: existingRow.email,
+      passwordHash: '',
+      bio: existingRow.bio || '',
+      avatar: existingRow.avatar || '',
+      createdAt: new Date(existingRow.created_at),
+      updatedAt: new Date(existingRow.updated_at),
+    } as IUser;
+
+    const tokenPayload: TokenPayload = { userId: user.id, username: user.username };
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+    await setValue(`refresh:${user.id}`, refreshToken, REFRESH_TOKEN_TTL);
+
+    return { user, accessToken, refreshToken };
+  }
+
+  const id = uuidv4();
+  const now = new Date();
+  const safeEmail = email || `${githubId}@github.placeholder`;
+
+  await run(
+    'INSERT INTO users (id, username, email, password_hash, github_id, avatar, bio, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, username, safeEmail, '', githubId, avatar || '', '', now, now]
+  );
+
+  const user: IUser = {
+    id,
+    username,
+    email: safeEmail,
+    passwordHash: '',
+    bio: '',
+    avatar: avatar || '',
+    createdAt: now,
+    updatedAt: now,
+  } as IUser;
+
+  const tokenPayload: TokenPayload = { userId: id, username };
+  const accessToken = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
+  await setValue(`refresh:${id}`, refreshToken, REFRESH_TOKEN_TTL);
 
   return { user, accessToken, refreshToken };
 }
@@ -251,6 +367,12 @@ export async function findTasksByUserId(
     }
   }
 
+  if (filter.search) {
+    whereClause += ' AND (t.name LIKE ? OR t.description LIKE ?)';
+    const searchPattern = `%${filter.search}%`;
+    params.push(searchPattern, searchPattern);
+  }
+
   // 获取总数
   const countResult = await get<any>(`SELECT COUNT(*) as total FROM tasks t ${whereClause}`, params);
   const total = countResult?.total || 0;
@@ -352,6 +474,9 @@ export default {
   findUserByEmail,
   createUser,
   loginUser,
+  updateUser,
+  changeUserPassword,
+  findOrCreateGitHubUser,
   logoutUser,
   refreshAccessToken,
   createTask,

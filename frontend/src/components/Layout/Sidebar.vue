@@ -1,108 +1,136 @@
 <template>
-  <el-aside :width="isCollapsed ? '64px' : '240px'" class="sidebar">
-    <div class="sidebar-content">
-      <div class="sidebar-search">
-        <el-input
-          v-if="!isCollapsed"
-          v-model="searchQuery"
-          placeholder="搜索任务..."
-          prefix-icon="Search"
-          clearable
-          @input="handleSearch"
-        />
-        <el-button v-else :icon="Search" circle @click="toggleCollapse" />
+  <template v-if="isMobile">
+    <el-drawer
+      v-model="internalDrawerVisible"
+      direction="ltr"
+      :with-header="false"
+      size="280px"
+      class="sidebar-drawer"
+      @close="emit('update:drawer-visible', false)"
+    >
+      <div class="sidebar-content mobile-sidebar">
+        <div class="sidebar-header">
+          <div class="new-task-btn" @click="handleNewTask">
+            <el-icon><Plus /></el-icon>
+            <span>新建任务</span>
+          </div>
+        </div>
+
+        <div class="sidebar-search">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索任务..."
+            prefix-icon="Search"
+            clearable
+            @input="handleSearch"
+            class="search-input"
+          />
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">任务视图</div>
+            <div
+              v-for="item in navItems"
+              :key="item.id"
+              class="nav-item"
+              :class="{ active: activeView === item.id }"
+              @click="handleMobileViewChange(item.id)"
+            >
+              <div class="nav-item-inner">
+                <el-icon class="nav-icon"><component :is="item.icon" /></el-icon>
+                <span class="nav-label">{{ item.label }}</span>
+                <el-badge
+                  v-if="counts[item.countKey] > 0"
+                  :value="counts[item.countKey]"
+                  :type="item.badgeType"
+                  class="nav-badge"
+                />
+              </div>
+            </div>
+          </div>
+        </nav>
       </div>
+    </el-drawer>
+  </template>
+  
+  <template v-else>
+    <el-aside :width="isCollapsed ? '64px' : '240px'" class="sidebar">
+      <div class="sidebar-content">
+        <div class="sidebar-header">
+          <div class="new-task-btn" @click="handleNewTask">
+            <el-icon><Plus /></el-icon>
+            <span v-if="!isCollapsed">新建任务</span>
+          </div>
+        </div>
 
-      <el-menu
-        :default-active="activeView"
-        class="sidebar-menu"
-        @select="handleViewChange"
-      >
-        <el-menu-item index="all">
-          <el-icon><List /></el-icon>
-          <template #title>
-            <div class="menu-item-content">
-              <span>全部任务</span>
-              <el-badge 
-                v-if="counts.all > 0" 
-                :value="counts.all" 
-                type="primary"
-              />
+        <div class="sidebar-search" v-if="!isCollapsed">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索任务..."
+            prefix-icon="Search"
+            clearable
+            @input="handleSearch"
+            class="search-input"
+          />
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title" v-if="!isCollapsed">任务视图</div>
+            <div
+              v-for="item in navItems"
+              :key="item.id"
+              class="nav-item"
+              :class="{ active: activeView === item.id }"
+              @click="handleViewChange(item.id)"
+            >
+              <el-tooltip :content="item.label" placement="right" :disabled="!isCollapsed">
+                <div class="nav-item-inner">
+                  <el-icon class="nav-icon"><component :is="item.icon" /></el-icon>
+                  <span class="nav-label" v-if="!isCollapsed">{{ item.label }}</span>
+                  <el-badge
+                    v-if="!isCollapsed && counts[item.countKey] > 0"
+                    :value="counts[item.countKey]"
+                    :type="item.badgeType"
+                    class="nav-badge"
+                  />
+                </div>
+              </el-tooltip>
             </div>
-          </template>
-        </el-menu-item>
+          </div>
+        </nav>
 
-        <el-menu-item index="today">
-          <el-icon><Calendar /></el-icon>
-          <template #title>
-            <div class="menu-item-content">
-              <span>今日</span>
-              <el-badge 
-                v-if="counts.today > 0" 
-                :value="counts.today" 
-                type="warning"
-              />
+        <div class="sidebar-footer">
+          <el-tooltip :content="isCollapsed ? '展开侧边栏' : '收起侧边栏'" placement="right">
+            <div class="collapse-btn" @click="toggleCollapse">
+              <el-icon><component :is="isCollapsed ? Expand : Fold" /></el-icon>
+              <span v-if="!isCollapsed">收起侧边栏</span>
             </div>
-          </template>
-        </el-menu-item>
-
-        <el-menu-item index="overdue">
-          <el-icon><Clock /></el-icon>
-          <template #title>
-            <div class="menu-item-content">
-              <span>过期</span>
-              <el-badge 
-                v-if="counts.overdue > 0" 
-                :value="counts.overdue" 
-                type="danger"
-              />
-            </div>
-          </template>
-        </el-menu-item>
-
-        <el-menu-item index="upcoming">
-          <el-icon><Timer /></el-icon>
-          <template #title>
-            <span>即将到期</span>
-          </template>
-        </el-menu-item>
-
-        <el-menu-item index="none">
-          <el-icon><Remove /></el-icon>
-          <template #title>
-            <span>无期限</span>
-          </template>
-        </el-menu-item>
-
-        <el-menu-item index="completed">
-          <el-icon><CircleCheck /></el-icon>
-          <template #title>
-            <span>已完成</span>
-          </template>
-        </el-menu-item>
-      </el-menu>
-
-      <div class="sidebar-footer">
-        <el-button
-          :icon="isCollapsed ? Expand : Fold"
-          text
-          @click="toggleCollapse"
-        >
-          {{ isCollapsed ? '' : '收起侧边栏' }}
-        </el-button>
+          </el-tooltip>
+        </div>
       </div>
-    </div>
-  </el-aside>
+    </el-aside>
+  </template>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, markRaw, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { 
-  Search, List, Calendar, Clock, Timer, Remove, CircleCheck, 
-  Fold, Expand 
+import {
+  Search, Plus, List, Calendar, Clock, Timer, Remove, CircleCheck,
+  Fold, Expand
 } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
+
+const props = defineProps<{
+  isMobile?: boolean
+  drawerVisible?: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:drawer-visible': [value: boolean]
+}>()
 
 const router = useRouter()
 const route = useRoute()
@@ -110,9 +138,25 @@ const taskStore = useTaskStore()
 
 const isCollapsed = ref(false)
 const searchQuery = ref('')
+const internalDrawerVisible = computed({
+  get: () => props.drawerVisible,
+  set: (value) => emit('update:drawer-visible', value)
+})
+
+const navItems = [
+  { id: 'all', label: '全部任务', icon: markRaw(List), countKey: 'all', badgeType: 'primary' },
+  { id: 'today', label: '今日', icon: markRaw(Calendar), countKey: 'today', badgeType: 'warning' },
+  { id: 'overdue', label: '过期', icon: markRaw(Clock), countKey: 'overdue', badgeType: 'danger' },
+  { id: 'upcoming', label: '即将到期', icon: markRaw(Timer), countKey: 'upcoming', badgeType: '' },
+  { id: 'none', label: '无期限', icon: markRaw(Remove), countKey: 'none', badgeType: '' },
+  { id: 'completed', label: '已完成', icon: markRaw(CircleCheck), countKey: 'completed', badgeType: 'success' },
+]
 
 const activeView = computed(() => {
-  return (route.query.view as string) || 'all'
+  const query = route.query
+  if (query.dueDateFilter) return query.dueDateFilter as string
+  if (query.completed === 'true') return 'completed'
+  return 'all'
 })
 
 const counts = computed(() => taskStore.taskCounts)
@@ -121,23 +165,30 @@ function toggleCollapse() {
   isCollapsed.value = !isCollapsed.value
 }
 
-function handleViewChange(index: string) {
+function handleNewTask() {
+  window.dispatchEvent(new CustomEvent('new-task'))
+  if (props.isMobile) {
+    emit('update:drawer-visible', false)
+  }
+}
+
+function handleViewChange(viewId: string) {
   const query: Record<string, string> = {}
-  
-  if (index === 'today') {
+
+  if (viewId === 'today') {
     query.dueDateFilter = 'today'
-  } else if (index === 'overdue') {
+  } else if (viewId === 'overdue') {
     query.dueDateFilter = 'overdue'
-  } else if (index === 'upcoming') {
+  } else if (viewId === 'upcoming') {
     query.dueDateFilter = 'upcoming'
-  } else if (index === 'none') {
+  } else if (viewId === 'none') {
     query.dueDateFilter = 'none'
-  } else if (index === 'completed') {
+  } else if (viewId === 'completed') {
     query.completed = 'true'
   }
-  
+
   router.push({ path: '/tasks', query })
-  
+
   if (query.dueDateFilter) {
     taskStore.setFilter({ dueDateFilter: query.dueDateFilter as any })
   } else if (query.completed) {
@@ -147,12 +198,13 @@ function handleViewChange(index: string) {
   }
 }
 
+function handleMobileViewChange(viewId: string) {
+  handleViewChange(viewId)
+  emit('update:drawer-visible', false)
+}
+
 function handleSearch() {
-  if (searchQuery.value) {
-    taskStore.setSearchQuery(searchQuery.value)
-  } else {
-    taskStore.setSearchQuery('')
-  }
+  taskStore.setSearchQuery(searchQuery.value)
 }
 
 onMounted(() => {
@@ -164,7 +216,7 @@ onMounted(() => {
 .sidebar {
   background-color: var(--bg-primary);
   border-right: 1px solid var(--border-light);
-  transition: width var(--transition-base);
+  transition: width var(--duration-normal) var(--ease-out);
   overflow: hidden;
 }
 
@@ -175,43 +227,148 @@ onMounted(() => {
   padding: var(--spacing-md);
 }
 
+.mobile-sidebar {
+  padding: var(--spacing-md);
+}
+
+.sidebar-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.new-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  height: var(--touch-target-size);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.new-task-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.new-task-btn:active {
+  transform: translateY(0);
+}
+
 .sidebar-search {
   margin-bottom: var(--spacing-md);
 }
 
-.sidebar-menu {
-  border: none;
-  background: transparent;
+.search-input :deep(.el-input__wrapper) {
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  box-shadow: none;
+  border: 1px solid transparent;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  background: var(--bg-tertiary);
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  background: var(--bg-primary);
+  border-color: var(--primary-color);
+}
+
+.sidebar-nav {
   flex: 1;
+  overflow-y: auto;
 }
 
-.sidebar-menu .el-menu-item {
-  height: 48px;
-  line-height: 48px;
+.nav-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.nav-section-title {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-item {
+  position: relative;
+  margin: 2px 0;
   border-radius: var(--radius-md);
-  margin: var(--spacing-xs) 0;
-  transition: all var(--transition-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  min-height: var(--touch-target-size);
 }
 
-.sidebar-menu .el-menu-item:hover {
-  background-color: var(--bg-tertiary);
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--primary-color);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: height var(--duration-fast) var(--ease-out);
 }
 
-.sidebar-menu .el-menu-item.is-active {
-  background-color: var(--primary-color);
-  color: white;
+.nav-item:hover {
+  background: var(--bg-secondary);
 }
 
-.sidebar-menu .el-menu-item.is-active .el-icon {
-  color: white;
+.nav-item:hover::before {
+  height: 20px;
 }
 
-.menu-item-content {
+.nav-item.active {
+  background: var(--bg-secondary);
+}
+
+.nav-item.active::before {
+  height: 24px;
+}
+
+.nav-item.active .nav-icon {
+  color: var(--primary-color);
+}
+
+.nav-item.active .nav-label {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.nav-item-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding-left: var(--spacing-sm);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  min-height: var(--touch-target-size);
+}
+
+.nav-icon {
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.nav-label {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.nav-badge {
+  transform: scale(0.9);
 }
 
 .sidebar-footer {
@@ -220,14 +377,33 @@ onMounted(() => {
   margin-top: auto;
 }
 
-.sidebar-footer .el-button {
-  width: 100%;
-  justify-content: flex-start;
-}
-
-:deep(.el-menu-item__title) {
+.collapse-btn {
   display: flex;
   align-items: center;
-  width: 100%;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.collapse-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.sidebar-drawer :deep(.el-drawer__body) {
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .nav-item,
+  .nav-item::before,
+  .new-task-btn {
+    transition: none;
+  }
 }
 </style>

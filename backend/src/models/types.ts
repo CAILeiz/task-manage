@@ -11,6 +11,9 @@ export interface IUser {
   username: string;
   email: string;
   passwordHash: string;
+  bio?: string;
+  avatar?: string;
+  githubId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +34,8 @@ export interface IUserResponse {
   id: string;
   username: string;
   email: string;
+  bio?: string;
+  avatar?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,4 +103,5 @@ export interface ITaskFilter {
   priority?: Priority;
   completed?: boolean;
   dueDateFilter?: 'today' | 'upcoming' | 'overdue' | 'none';
+  search?: string;
 }

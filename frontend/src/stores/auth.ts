@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { User } from '../types';
-import { login as loginApi, register as registerApi, getMe } from '../api/auth';
+import { login as loginApi, register as registerApi, getMe, updateProfile as updateProfileApi, changePassword as changePasswordApi, githubLogin } from '../api/auth';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
@@ -70,6 +70,54 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function updateProfile(data: { username?: string; email?: string; bio?: string; avatar?: string }) {
+    loading.value = true;
+    try {
+      const response = await updateProfileApi(data);
+      if (response.code === 0) {
+        user.value = response.data;
+        return { success: true };
+      }
+      return { success: false, message: response.message };
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || '更新失败' };
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function changePassword(currentPassword: string, newPassword: string) {
+    loading.value = true;
+    try {
+      const response = await changePasswordApi({ currentPassword, newPassword });
+      if (response.code === 0) {
+        return { success: true };
+      }
+      return { success: false, message: response.message };
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || '密码修改失败' };
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function loginWithGitHub(code: string) {
+    loading.value = true;
+    try {
+      const response = await githubLogin(code);
+      if (response.code === 0) {
+        setToken(response.data.accessToken);
+        user.value = response.data.user;
+        return { success: true };
+      }
+      return { success: false, message: response.message };
+    } catch (error: any) {
+      return { success: false, message: error.response?.data?.message || 'GitHub 登录失败' };
+    } finally {
+      loading.value = false;
+    }
+  }
+
   function logout() {
     clearToken();
   }
@@ -86,5 +134,8 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     fetchUser,
+    updateProfile,
+    changePassword,
+    loginWithGitHub,
   };
 });

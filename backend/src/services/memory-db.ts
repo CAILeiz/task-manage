@@ -65,6 +65,76 @@ export async function loginUser(usernameOrEmail: string, password: string): Prom
   return { user: { ...user }, accessToken, refreshToken };
 }
 
+export async function updateUser(id: string, data: { username?: string; email?: string; bio?: string; avatar?: string }): Promise<IUser | null> {
+  const user = users.find(u => u.id === id);
+  if (!user) {
+    return null;
+  }
+
+  if (data.username !== undefined) user.username = data.username;
+  if (data.email !== undefined) user.email = data.email;
+  if (data.bio !== undefined) (user as any).bio = data.bio;
+  if (data.avatar !== undefined) (user as any).avatar = data.avatar;
+  
+  user.updatedAt = new Date();
+
+  return { ...user };
+}
+
+export async function changeUserPassword(id: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  const user = users.find(u => u.id === id);
+  if (!user) {
+    return { success: false, message: '用户不存在' };
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isPasswordValid) {
+    return { success: false, message: '当前密码错误' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, message: '新密码长度至少6位' };
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  user.updatedAt = new Date();
+
+  return { success: true, message: '密码修改成功' };
+}
+
+export async function findOrCreateGitHubUser(githubId: string, username: string, email: string, avatar?: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+  let user = users.find(u => (u as any).githubId === githubId);
+  
+  if (user) {
+    const accessToken = `token_${user.id}_${Date.now()}`;
+    const refreshToken = `refresh_${user.id}_${Date.now()}`;
+    return { user: { ...user }, accessToken, refreshToken };
+  }
+
+  const id = uuidv4();
+  const now = new Date();
+
+  const newUser: IUser = {
+    id,
+    username,
+    email,
+    passwordHash: '',
+    createdAt: now,
+    updatedAt: now,
+  } as any;
+  
+  (newUser as any).githubId = githubId;
+  (newUser as any).avatar = avatar;
+  (newUser as any).bio = '';
+
+  users.push(newUser);
+
+  const accessToken = `token_${id}_${Date.now()}`;
+  const refreshToken = `refresh_${id}_${Date.now()}`;
+
+  return { user: { ...newUser }, accessToken, refreshToken };
+}
+
 // 任务服务
 
 export async function createTask(userId: string, data: ICreateTaskRequest): Promise<ITask> {
@@ -204,12 +274,12 @@ export default {
   findUserByEmail,
   createUser,
   loginUser,
+  updateUser,
+  changeUserPassword,
+  findOrCreateGitHubUser,
   createTask,
   findTaskById,
   findTasksByUserId,
   updateTask,
   deleteTask,
-  initDatabase,
-  closePool,
-  clearDatabase,
 };

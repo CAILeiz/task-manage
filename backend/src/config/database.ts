@@ -74,12 +74,40 @@ export async function initDatabase(): Promise<void> {
       username VARCHAR(50) NOT NULL UNIQUE,
       email VARCHAR(100) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
+      bio TEXT DEFAULT NULL,
+      avatar VARCHAR(500) DEFAULT NULL,
+      github_id VARCHAR(50) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_username (username),
-      INDEX idx_email (email)
+      INDEX idx_email (email),
+      INDEX idx_github_id (github_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  // 检查并添加新字段（兼容已有表）
+  const [columns] = await pool.execute(`
+    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users'
+  `, [process.env.DB_NAME || 'taskmanage']) as [any[], any];
+  
+  const existingColumns = columns.map((col: any) => col.COLUMN_NAME);
+  
+  if (!existingColumns.includes('bio')) {
+    await pool.execute('ALTER TABLE users ADD COLUMN bio TEXT DEFAULT NULL AFTER password_hash');
+    console.log('Added bio column to users table');
+  }
+  
+  if (!existingColumns.includes('avatar')) {
+    await pool.execute('ALTER TABLE users ADD COLUMN avatar VARCHAR(500) DEFAULT NULL AFTER bio');
+    console.log('Added avatar column to users table');
+  }
+  
+  if (!existingColumns.includes('github_id')) {
+    await pool.execute('ALTER TABLE users ADD COLUMN github_id VARCHAR(50) DEFAULT NULL AFTER avatar');
+    await pool.execute('ALTER TABLE users ADD INDEX idx_github_id (github_id)');
+    console.log('Added github_id column to users table');
+  }
 
   // 创建 tasks 表
   await pool.execute(`

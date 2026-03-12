@@ -79,7 +79,7 @@ async function handleCommand(command: string) {
       // 用户取消
     }
   } else if (command === 'settings') {
-    ElMessage.info('个人设置功能开发中')
+    router.push('/tasks/settings')
   }
 }
 </script>
